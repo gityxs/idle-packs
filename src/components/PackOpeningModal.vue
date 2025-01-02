@@ -188,7 +188,11 @@ const openAnother = () => {
 // Calculate total value of revealed items
 const totalValue = computed(() => {
     return stackedItems.value.reduce((sum, item) => {
-        return sum.plus(item.value.times(item.amount))
+        if (item.value) {
+            return sum.plus(item.value.times(item.amount))
+        }
+
+        return sum
     }, new BigNumber(0))
 })
 
