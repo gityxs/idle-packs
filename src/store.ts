@@ -30,6 +30,16 @@ interface OwnedPack extends Pack {
   amount: number
 }
 
+// Add new interfaces for generators
+interface Generator {
+  id: string
+  name: string
+  baseProduction: number | string // Amount of coins generated per second
+  baseCost: number | string
+  amount: number
+  description: string
+}
+
 export const useStore = defineStore('main', {
   state: () => ({
     debug: import.meta.env.MODE === 'development',
@@ -86,6 +96,13 @@ export const useStore = defineStore('main', {
             rarity: 'rare',
             dropChance: 5,
           },
+          {
+            id: 'magic-staff',
+            name: 'Magic Staff',
+            value: 250,
+            rarity: 'legendary',
+            dropChance: 1,
+          },
         ],
       },
       {
@@ -121,7 +138,7 @@ export const useStore = defineStore('main', {
             name: 'Legendary Gem',
             value: 2000,
             rarity: 'legendary',
-            dropChance: 5,
+            dropChance: 0.01,
           },
         ],
       },
@@ -130,13 +147,53 @@ export const useStore = defineStore('main', {
     settings: {
       showAnimations: true,
     },
+
+    generators: [
+      {
+        id: 'coin-miner',
+        name: 'Coin Miner',
+        baseProduction: 1,
+        baseCost: 100,
+        amount: 0,
+        description: 'A basic machine that generates coins',
+      },
+      {
+        id: 'treasure-hunter',
+        name: 'Treasure Hunter',
+        baseProduction: 5,
+        baseCost: 500,
+        amount: 0,
+        description: 'Searches for valuable treasures',
+      },
+      {
+        id: 'magic-forge',
+        name: 'Magic Forge',
+        baseProduction: 25,
+        baseCost: 2500,
+        amount: 0,
+        description: 'Magically forges coins from thin air',
+      },
+      {
+        id: 'dragon-hoard',
+        name: 'Dragon Hoard',
+        baseProduction: 100,
+        baseCost: 10000,
+        amount: 0,
+        description: 'A dragon that hoards and multiplies coins',
+      },
+    ] as Generator[],
+
+    lastUpdate: Date.now(), // Track time for production calculations
   }),
 
   actions: {
     initApp() {
       this.isInitialized = true
-      // Initialize with some starting coins
       this.coins = new BigNumber(500)
+
+      // Start production interval
+      setInterval(() => this.updateProduction(), 1000)
+
       console.log('Game initialized!')
     },
 
@@ -175,8 +232,9 @@ export const useStore = defineStore('main', {
 
       const allItems: Item[] = []
 
-      // Open specified number of packs
-      for (let i = 0; i < amount; i++) {
+      // Open all packs at once
+      const numPacks = Math.min(amount, pack.amount)
+      for (let i = 0; i < numPacks; i++) {
         const numItems = Math.floor(Math.random() * (pack.maxItems - pack.minItems + 1)) + pack.minItems
 
         for (let j = 0; j < numItems; j++) {
@@ -186,7 +244,7 @@ export const useStore = defineStore('main', {
       }
 
       // Remove opened packs
-      pack.amount -= amount
+      pack.amount -= numPacks
       if (pack.amount <= 0) {
         const index = this.ownedPacks.indexOf(pack)
         this.ownedPacks.splice(index, 1)
@@ -254,6 +312,84 @@ export const useStore = defineStore('main', {
     toggleAnimations() {
       this.settings.showAnimations = !this.settings.showAnimations
     },
+
+    sellAllItems() {
+      // Calculate total value of all items
+      const totalValue = this.inventory.reduce((sum, item) => {
+        return sum.plus(item.value.times(item.amount))
+      }, new BigNumber(0))
+
+      // Add coins
+      this.coins = this.coins.plus(totalValue)
+
+      // Clear inventory
+      this.inventory = []
+
+      return totalValue
+    },
+
+    buyGenerator(generatorId: string, amount = 1) {
+      const generator = this.generators.find(g => g.id === generatorId)
+      if (!generator) return false
+
+      const cost = this.getGeneratorCost(generator, amount)
+      if (this.coins.isLessThan(cost)) return false
+
+      this.coins = this.coins.minus(cost)
+      generator.amount += amount
+      return true
+    },
+
+    getGeneratorCost(generator: Generator, amount = 1): BigNumber {
+      // Cost increases exponentially with amount owned
+      // Formula: baseCost * (1.15 ^ amount)
+      const baseCost = new BigNumber(generator.baseCost)
+      const currentCost = baseCost.times(new BigNumber(1.15).pow(generator.amount))
+
+      // Calculate total cost for buying multiple
+      if (amount === 1) return currentCost
+
+      const finalCost = baseCost
+        .times(new BigNumber(1.15).pow(generator.amount + amount).minus(new BigNumber(1.15).pow(generator.amount)))
+        .dividedBy(0.15)
+
+      return finalCost
+    },
+
+    getMaxBuyableGenerators(generatorId: string): number {
+      const generator = this.generators.find(g => g.id === generatorId)
+      if (!generator) return 0
+
+      // Formula: log1.15(coins * 0.15 / baseCost + 1.15^current) - current
+      const coins = this.coins
+      const baseCost = new BigNumber(generator.baseCost)
+      const current = generator.amount
+
+      if (coins.isLessThan(baseCost)) return 0
+
+      const maxAmount = Math.floor(
+        Math.log(coins.times(0.15).dividedBy(baseCost).plus(new BigNumber(1.15).pow(current)).toNumber()) /
+          Math.log(1.15) -
+          current
+      )
+
+      return Math.max(0, maxAmount)
+    },
+
+    updateProduction() {
+      const now = Date.now()
+      const delta = (now - this.lastUpdate) / 1000 // Time in seconds
+
+      // Calculate total production
+      const production = this.generators.reduce((total, generator) => {
+        const baseProduction = new BigNumber(generator.baseProduction)
+        return total.plus(baseProduction.times(generator.amount))
+      }, new BigNumber(0))
+
+      // Add produced coins
+      this.coins = this.coins.plus(production.times(delta))
+      this.lastUpdate = now
+    },
   },
 
   getters: {
@@ -265,6 +401,16 @@ export const useStore = defineStore('main', {
 
     // Add formatters
     formattedCoins: state => formatNumber(state.coins),
+
+    totalProduction(): BigNumber {
+      return this.generators.reduce((total, generator) => {
+        return total.plus(new BigNumber(generator.baseProduction).times(generator.amount))
+      }, new BigNumber(0))
+    },
+
+    formattedProduction(): string {
+      return `${formatNumber(this.totalProduction)}/s`
+    },
   },
 })
 

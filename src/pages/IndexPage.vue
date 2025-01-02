@@ -8,7 +8,12 @@
             Coins: {{ store.formattedCoins }}
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-4">
+          <button v-if="store.inventory.length > 0" @click="sellAllItems"
+            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2">
+            <span>Sell All ({{ formatNumber(totalInventoryValue) }})</span>
+          </button>
+
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" :checked="store.settings.showAnimations" @change="store.toggleAnimations"
               class="w-4 h-4">
@@ -36,6 +41,13 @@
               : 'text-gray-500 hover:text-gray-700'
           ]">
             Inventory
+          </button>
+          <button @click="activeTab = 'generators'" class="py-2 px-1 -mb-px" :class="[
+            activeTab === 'generators'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+            Generators
           </button>
         </nav>
       </div>
@@ -130,6 +142,11 @@
           No items in inventory
         </div>
       </div>
+
+      <!-- Generators Tab -->
+      <div v-else-if="activeTab === 'generators'">
+        <Generators />
+      </div>
     </div>
 
     <PackOpeningModal v-if="openingItems.length > 0" :show="true" :items="openingItems" :pack-name="openingPackName"
@@ -144,6 +161,7 @@ import { useStore } from '../store'
 import { ref, reactive, computed } from 'vue'
 import BigNumber from 'bignumber.js'
 import PackOpeningModal from '../components/PackOpeningModal.vue'
+import Generators from '../components/Generators.vue'
 
 const store = useStore()
 const activeTab = ref('packs')
@@ -216,32 +234,21 @@ const handleOpenPack = (packId: string, amount: number) => {
   if (!pack) return
 
   currentOpeningPackId.value = packId
-  remainingPacksToOpen.value = amount - 1 // Subtract 1 because we're opening one now
-
-  const items = store.openPack(packId, 1)
+  const items = store.openPack(packId, amount) // Open all packs at once
   if (items) {
     openingItems.value = items
     openingPackName.value = pack.name
     const originalPack = store.availablePacks.find(p => p.id === packId)
-    openingPackPrice.value = originalPack?.price ?? 0
+    openingPackPrice.value = (originalPack?.price ?? 0) * amount // Multiply price by amount
   }
 }
 
 // Check if there are more packs to open
-const hasMorePacksToOpen = computed(() => {
-  const pack = store.ownedPacks.find(p => p.id === currentOpeningPackId.value)
-  return pack ? pack.amount > 0 : false
-})
+const hasMorePacksToOpen = computed(() => false)
 
 // Handle opening another pack
 const openAnotherPack = () => {
-  if (remainingPacksToOpen.value > 0) {
-    remainingPacksToOpen.value--
-    handleOpenPack(currentOpeningPackId.value, 1)
-  } else {
-    // Normal single pack opening
-    handleOpenPack(currentOpeningPackId.value, 1)
-  }
+  handleOpenPack(currentOpeningPackId.value, 1)
 }
 
 const finishOpening = () => {
@@ -251,6 +258,19 @@ const finishOpening = () => {
   openingPackPrice.value = 0
   currentOpeningPackId.value = ''
   remainingPacksToOpen.value = 0 // Reset remaining packs
+}
+
+// Add computed for total inventory value
+const totalInventoryValue = computed(() => {
+  return store.inventory.reduce((total, item) => {
+    return total.plus(item.value.times(item.amount))
+  }, new BigNumber(0))
+})
+
+// Add sell all function
+const sellAllItems = () => {
+  if (!store.inventory.length) return
+  store.sellAllItems()
 }
 
 // Initialize the game when the component is mounted
