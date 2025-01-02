@@ -104,8 +104,12 @@
                   Open 1
                 </button>
                 <button v-if="pack.amount > 1" @click="handleOpenPack(pack.id, pack.amount)"
-                  class="flex-1 px-4 py-2 bg-green-700 text-white rounded">
+                  class="flex-1 px-4 py-2 bg-green-700 text-white rounded group relative">
                   Open All
+                  <span v-if="pack.amount > MAX_PACKS_PER_OPEN" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded
+                      opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                    Will open {{ MAX_PACKS_PER_OPEN }} packs maximum
+                  </span>
                 </button>
               </div>
             </div>
@@ -229,18 +233,23 @@ const openingPackPrice = ref(0)
 const currentOpeningPackId = ref('')
 const remainingPacksToOpen = ref(0)
 
+// Add these constants
+const MAX_PACKS_PER_OPEN = 1000
+
 // Update the pack opening logic
 const handleOpenPack = (packId: string, amount: number) => {
   const pack = store.ownedPacks.find(p => p.id === packId)
   if (!pack) return
 
   currentOpeningPackId.value = packId
-  const items = store.openPack(packId, amount) // Open all packs at once
+  const items = store.openPack(packId, amount)
   if (items) {
     openingItems.value = items
     openingPackName.value = pack.name
     const originalPack = store.availablePacks.find(p => p.id === packId)
-    openingPackPrice.value = (originalPack?.price ?? 0) * amount // Multiply price by amount
+    // Calculate price based on actual number of packs opened
+    const actualPacksOpened = Math.min(amount, MAX_PACKS_PER_OPEN)
+    openingPackPrice.value = (originalPack?.price ?? 0) * actualPacksOpened
   }
 }
 

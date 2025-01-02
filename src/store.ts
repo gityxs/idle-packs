@@ -1,5 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import BigNumber from 'bignumber.js'
+import { itemManager } from './managers/itemManager'
 
 interface Item {
   id: string
@@ -23,7 +24,7 @@ interface Pack {
   price: number
   minItems: number
   maxItems: number
-  possibleItems: ItemTemplate[]
+  possibleItems: ItemDrop[] // Now just contains id and drop chance
 }
 
 interface OwnedPack extends Pack {
@@ -39,6 +40,8 @@ interface Generator {
   amount: number
   description: string
 }
+
+const MAX_PACKS_PER_OPEN = 1000
 
 export const useStore = defineStore('main', {
   state: () => ({
@@ -68,41 +71,11 @@ export const useStore = defineStore('main', {
         minItems: 3,
         maxItems: 5,
         possibleItems: [
-          {
-            id: 'wooden-sword',
-            name: 'Wooden Sword',
-            value: 10,
-            rarity: 'common',
-            dropChance: 40,
-          },
-          {
-            id: 'leather-armor',
-            name: 'Leather Armor',
-            value: 15,
-            rarity: 'common',
-            dropChance: 20,
-          },
-          {
-            id: 'iron-dagger',
-            name: 'Iron Dagger',
-            value: 50,
-            rarity: 'uncommon',
-            dropChance: 10,
-          },
-          {
-            id: 'health-potion',
-            name: 'Health Potion',
-            value: 150,
-            rarity: 'rare',
-            dropChance: 5,
-          },
-          {
-            id: 'magic-staff',
-            name: 'Magic Staff',
-            value: 120,
-            rarity: 'rare',
-            dropChance: 1,
-          },
+          { itemId: 'wooden-sword', dropChance: 35 },
+          { itemId: 'leather-armor', dropChance: 35 },
+          { itemId: 'iron-dagger', dropChance: 20 },
+          { itemId: 'health-potion', dropChance: 8 },
+          { itemId: 'magic-staff', dropChance: 2 },
         ],
       },
       {
@@ -112,34 +85,10 @@ export const useStore = defineStore('main', {
         minItems: 4,
         maxItems: 6,
         possibleItems: [
-          {
-            id: 'steel-sword',
-            name: 'Steel Sword',
-            value: 50,
-            rarity: 'uncommon',
-            dropChance: 40,
-          },
-          {
-            id: 'magic-staff',
-            name: 'Magic Staff',
-            value: 120,
-            rarity: 'rare',
-            dropChance: 35,
-          },
-          {
-            id: 'dragon-scale',
-            name: 'Dragon Scale',
-            value: 500,
-            rarity: 'epic',
-            dropChance: 10,
-          },
-          {
-            id: 'legendary-gem',
-            name: 'Legendary Gem',
-            value: 1000,
-            rarity: 'legendary',
-            dropChance: 1,
-          },
+          { itemId: 'steel-sword', dropChance: 35 },
+          { itemId: 'health-potion', dropChance: 35 },
+          { itemId: 'dragon-scale', dropChance: 25 },
+          { itemId: 'legendary-gem', dropChance: 5 },
         ],
       },
     ] as Pack[],
@@ -230,10 +179,10 @@ export const useStore = defineStore('main', {
       const pack = this.ownedPacks.find(p => p.id === packId)
       if (!pack || pack.amount < amount) return false
 
+      // Limit the number of packs that can be opened at once
+      const numPacks = Math.min(amount, pack.amount, MAX_PACKS_PER_OPEN)
       const allItems: Item[] = []
 
-      // Open all packs at once
-      const numPacks = Math.min(amount, pack.amount)
       for (let i = 0; i < numPacks; i++) {
         const numItems = Math.floor(Math.random() * (pack.maxItems - pack.minItems + 1)) + pack.minItems
 
@@ -254,25 +203,14 @@ export const useStore = defineStore('main', {
     },
 
     generateItemFromPack(pack: Pack): Item | null {
-      // Roll for each possible item based on drop chance
-      const roll = Math.random() * 100
-      let chanceSum = 0
-
-      for (const template of pack.possibleItems) {
-        chanceSum += template.dropChance
-        if (roll <= chanceSum) {
-          return {
-            ...template,
-            value: new BigNumber(template.value),
-            amount: 1,
-          }
-        }
+      const itemId = itemManager.rollForItem(pack.possibleItems)
+      if (!itemId) {
+        // Fallback to first common item
+        const fallbackId = pack.possibleItems[0]?.itemId
+        return fallbackId ? itemManager.createItem(fallbackId) : null
       }
 
-      // Fallback to first common item if nothing was selected
-      // (shouldn't happen if drop chances sum to 100)
-      const fallbackItem = pack.possibleItems.find(item => item.rarity === 'common')
-      return fallbackItem ? { ...fallbackItem, amount: 1 } : null
+      return itemManager.createItem(itemId)
     },
 
     addItemToInventory(newItem: Item) {
