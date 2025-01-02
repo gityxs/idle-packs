@@ -4,7 +4,7 @@ import IndexPage from '@/pages/IndexPage.vue'
 
 const routes = [
   {
-    path: '/',
+    path: '/idle-packs',
     component: IndexPage,
     meta: {
       title: 'Idle Packs',

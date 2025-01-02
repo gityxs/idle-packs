@@ -39,4 +39,5 @@ export default defineConfig({
   css: {
     preprocessorMaxWorkers: true,
   },
+  base: '/idle-packs/',
 })
