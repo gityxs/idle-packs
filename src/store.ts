@@ -10,14 +10,6 @@ interface Item {
   amount: number
 }
 
-interface ItemTemplate {
-  id: string
-  name: string
-  value: number | string // Base value that will be converted to BigNumber
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
-  dropChance: number
-}
-
 interface Pack {
   id: string
   name: string
@@ -67,7 +59,7 @@ export const useStore = defineStore('main', {
       {
         id: 'basic-pack',
         name: 'Basic Pack',
-        price: 50,
+        price: 75,
         minItems: 3,
         maxItems: 5,
         possibleItems: [
@@ -81,9 +73,9 @@ export const useStore = defineStore('main', {
       {
         id: 'premium-pack',
         name: 'Premium Pack',
-        price: 300,
-        minItems: 4,
-        maxItems: 6,
+        price: 400,
+        minItems: 3,
+        maxItems: 5,
         possibleItems: [
           { itemId: 'steel-sword', dropChance: 35 },
           { itemId: 'health-potion', dropChance: 35 },

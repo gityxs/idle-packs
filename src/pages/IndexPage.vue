@@ -236,29 +236,36 @@ const remainingPacksToOpen = ref(0)
 // Add these constants
 const MAX_PACKS_PER_OPEN = 1000
 
-// Update the pack opening logic
+// Update the hasMorePacksToOpen computed property
+const hasMorePacksToOpen = computed(() => {
+  const pack = store.ownedPacks.find(p => p.id === currentOpeningPackId.value)
+  return pack ? pack.amount > 0 : false
+})
+
+// Update handleOpenPack to handle remaining packs
 const handleOpenPack = (packId: string, amount: number) => {
   const pack = store.ownedPacks.find(p => p.id === packId)
   if (!pack) return
 
   currentOpeningPackId.value = packId
-  const items = store.openPack(packId, amount)
+  const actualPacksOpened = Math.min(amount, MAX_PACKS_PER_OPEN)
+  const items = store.openPack(packId, actualPacksOpened)
+
   if (items) {
     openingItems.value = items
     openingPackName.value = pack.name
     const originalPack = store.availablePacks.find(p => p.id === packId)
-    // Calculate price based on actual number of packs opened
-    const actualPacksOpened = Math.min(amount, MAX_PACKS_PER_OPEN)
     openingPackPrice.value = (originalPack?.price ?? 0) * actualPacksOpened
   }
 }
 
-// Check if there are more packs to open
-const hasMorePacksToOpen = computed(() => false)
-
-// Handle opening another pack
+// Update openAnotherPack to handle remaining packs
 const openAnotherPack = () => {
-  handleOpenPack(currentOpeningPackId.value, 1)
+  store.addItemsToInventory(openingItems.value)
+  const pack = store.ownedPacks.find(p => p.id === currentOpeningPackId.value)
+  if (pack && pack.amount > 0) {
+    handleOpenPack(currentOpeningPackId.value, 1)
+  }
 }
 
 const finishOpening = () => {

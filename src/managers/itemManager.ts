@@ -20,35 +20,35 @@ export class ItemManager {
     this.registerItem({
       id: 'wooden-sword',
       name: 'Wooden Sword',
-      value: 10,
+      value: 5,
       rarity: 'common',
     })
 
     this.registerItem({
       id: 'leather-armor',
       name: 'Leather Armor',
-      value: 15,
+      value: 8,
       rarity: 'common',
     })
 
     this.registerItem({
       id: 'iron-dagger',
       name: 'Iron Dagger',
-      value: 50,
+      value: 30,
       rarity: 'uncommon',
     })
 
     this.registerItem({
       id: 'health-potion',
       name: 'Health Potion',
-      value: 150,
+      value: 80,
       rarity: 'rare',
     })
 
     this.registerItem({
       id: 'magic-staff',
       name: 'Magic Staff',
-      value: 250,
+      value: 150,
       rarity: 'legendary',
     })
 
@@ -62,14 +62,14 @@ export class ItemManager {
     this.registerItem({
       id: 'dragon-scale',
       name: 'Dragon Scale',
-      value: 500,
+      value: 100,
       rarity: 'epic',
     })
 
     this.registerItem({
       id: 'legendary-gem',
       name: 'Legendary Gem',
-      value: 2000,
+      value: 1000,
       rarity: 'legendary',
     })
   }
