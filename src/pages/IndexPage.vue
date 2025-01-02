@@ -1,48 +1,49 @@
 <template>
   <div class="flex flex-col items-center min-h-screen p-4 gap-6">
     <header class="w-full max-w-4xl mb-6">
-      <div class="flex justify-between items-center">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         <div>
-          <h1 class="text-3xl font-bold mb-2">Idle Pack Opening Game</h1>
-          <div class="text-xl">
+          <h1 class="text-2xl sm:text-3xl font-bold mb-2">Idle Pack Opening Game</h1>
+          <div class="text-lg sm:text-xl">
             Coins: {{ store.formattedCoins }}
           </div>
         </div>
-        <div class="flex items-center gap-4">
-          <button v-if="store.inventory.length > 0" @click="sellAllItems"
-            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2">
-            <span>Sell All ({{ formatNumber(totalInventoryValue) }})</span>
-          </button>
+      </div>
 
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" :checked="store.settings.showAnimations" @change="store.toggleAnimations"
-              class="w-4 h-4">
-            <span class="text-sm">Show Animations</span>
-          </label>
-        </div>
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-end">
+        <button v-if="store.inventory.length > 0" @click="sellAllItems"
+          class="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center gap-2">
+          <span>Sell All ({{ formatNumber(totalInventoryValue) }})</span>
+        </button>
+
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" :checked="store.settings.showAnimations" @change="store.toggleAnimations"
+            class="w-4 h-4">
+          <span class="text-sm">Show Animations</span>
+        </label>
       </div>
     </header>
 
     <!-- Game Content -->
     <div class="w-full max-w-4xl p-4">
       <!-- Tabs -->
-      <div class="border-b border-gray-200 mb-6">
-        <nav class="flex gap-4">
-          <button @click="activeTab = 'packs'" class="py-2 px-1 -mb-px" :class="[
+      <div class="border-b border-gray-200 mb-6 overflow-x-auto">
+        <nav class="flex gap-4 min-w-max">
+          <button @click="activeTab = 'packs'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
             activeTab === 'packs'
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           ]">
             Packs
           </button>
-          <button @click="activeTab = 'inventory'" class="py-2 px-1 -mb-px" :class="[
+          <button @click="activeTab = 'inventory'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
             activeTab === 'inventory'
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           ]">
             Inventory
           </button>
-          <button @click="activeTab = 'generators'" class="py-2 px-1 -mb-px" :class="[
+          <button @click="activeTab = 'generators'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
             activeTab === 'generators'
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
@@ -53,10 +54,10 @@
       </div>
 
       <!-- Tab Content -->
-      <div v-if="activeTab === 'packs'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div v-if="activeTab === 'packs'" class="grid grid-cols-1 gap-6">
         <!-- Left Column: Shop -->
         <div>
-          <h2 class="text-2xl mb-4">Shop</h2>
+          <h2 class="text-xl sm:text-2xl mb-4">Shop</h2>
           <div class="grid gap-4">
             <div v-for="pack in store.availablePacks" :key="pack.id" class="border p-4 rounded-lg min-w-[200px]">
               <h3 class="font-bold">{{ pack.name }}</h3>
@@ -93,7 +94,7 @@
 
         <!-- Right Column: Owned Packs -->
         <div>
-          <h2 class="text-2xl mb-4">Your Packs</h2>
+          <h2 class="text-xl sm:text-2xl mb-4">Your Packs</h2>
           <div class="grid gap-4 min-h-[200px]">
             <div v-for="pack in store.ownedPacks" :key="pack.id" class="border p-4 rounded-lg">
               <h3 class="font-bold">{{ pack.name }}</h3>
@@ -116,7 +117,7 @@
       </div>
 
       <!-- Inventory Tab -->
-      <div v-else-if="activeTab === 'inventory'" class="grid grid-cols-3 gap-4">
+      <div v-else-if="activeTab === 'inventory'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="item in store.inventory" :key="item.id" class="border p-4 rounded-lg" :class="{
           'border-gray-300': item.rarity === 'common',
           'border-green-400': item.rarity === 'uncommon',
