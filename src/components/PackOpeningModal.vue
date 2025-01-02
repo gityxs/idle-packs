@@ -83,7 +83,7 @@
                         <div class="text-right">
                             <p class="font-medium">{{ formatNumber(item.value) }} coins each</p>
                             <p class="text-sm text-gray-600">
-                                Total: {{ formatNumber(item.value.times(item.amount)) }}
+                                Total: {{ formatNumber(item.value?.times(item.amount)) }}
                             </p>
                         </div>
                     </div>
