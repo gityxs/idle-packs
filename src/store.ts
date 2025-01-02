@@ -5,6 +5,15 @@ interface Item {
   name: string
   value: number
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+  amount: number
+}
+
+interface ItemTemplate {
+  id: string
+  name: string
+  value: number
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+  dropChance: number // Percentage (0-100)
 }
 
 interface Pack {
@@ -13,6 +22,7 @@ interface Pack {
   price: number
   minItems: number
   maxItems: number
+  possibleItems: ItemTemplate[]
 }
 
 export const useStore = defineStore('main', {
@@ -42,6 +52,36 @@ export const useStore = defineStore('main', {
         price: 100,
         minItems: 3,
         maxItems: 5,
+        possibleItems: [
+          {
+            id: 'wooden-sword',
+            name: 'Wooden Sword',
+            value: 50,
+            rarity: 'common',
+            dropChance: 35,
+          },
+          {
+            id: 'leather-armor',
+            name: 'Leather Armor',
+            value: 75,
+            rarity: 'common',
+            dropChance: 35,
+          },
+          {
+            id: 'iron-dagger',
+            name: 'Iron Dagger',
+            value: 150,
+            rarity: 'uncommon',
+            dropChance: 20,
+          },
+          {
+            id: 'health-potion',
+            name: 'Health Potion',
+            value: 200,
+            rarity: 'rare',
+            dropChance: 10,
+          },
+        ],
       },
       {
         id: 'premium-pack',
@@ -49,6 +89,36 @@ export const useStore = defineStore('main', {
         price: 500,
         minItems: 4,
         maxItems: 6,
+        possibleItems: [
+          {
+            id: 'steel-sword',
+            name: 'Steel Sword',
+            value: 300,
+            rarity: 'uncommon',
+            dropChance: 30,
+          },
+          {
+            id: 'magic-staff',
+            name: 'Magic Staff',
+            value: 600,
+            rarity: 'rare',
+            dropChance: 25,
+          },
+          {
+            id: 'dragon-scale',
+            name: 'Dragon Scale',
+            value: 1000,
+            rarity: 'epic',
+            dropChance: 10,
+          },
+          {
+            id: 'legendary-gem',
+            name: 'Legendary Gem',
+            value: 2500,
+            rarity: 'legendary',
+            dropChance: 5,
+          },
+        ],
       },
     ] as Pack[],
   }),
@@ -78,47 +148,69 @@ export const useStore = defineStore('main', {
       // Remove the pack from inventory
       const pack = this.ownedPacks.splice(packIndex, 1)[0]
 
-      // Generate random items (simplified version)
+      // Generate random items
       const numItems = Math.floor(Math.random() * (pack.maxItems - pack.minItems + 1)) + pack.minItems
 
       const items: Item[] = []
       for (let i = 0; i < numItems; i++) {
-        items.push(this.generateRandomItem())
+        const item = this.generateItemFromPack(pack)
+        if (item) items.push(item)
       }
 
-      this.inventory.push(...items)
+      // Add items to inventory (with stacking)
+      items.forEach(item => this.addItemToInventory(item))
       return items
     },
 
-    sellItem(itemId: string) {
-      const itemIndex = this.inventory.findIndex(i => i.id === itemId)
-      if (itemIndex === -1) return false
+    generateItemFromPack(pack: Pack): Item | null {
+      // Roll for each possible item based on drop chance
+      const roll = Math.random() * 100
+      let chanceSum = 0
 
-      const item = this.inventory[itemIndex]
-      this.inventory.splice(itemIndex, 1)
-      this.coins += item.value
-      return true
+      for (const template of pack.possibleItems) {
+        chanceSum += template.dropChance
+        if (roll <= chanceSum) {
+          return {
+            ...template,
+            amount: 1,
+          }
+        }
+      }
+
+      // Fallback to first common item if nothing was selected
+      // (shouldn't happen if drop chances sum to 100)
+      const fallbackItem = pack.possibleItems.find(item => item.rarity === 'common')
+      return fallbackItem ? { ...fallbackItem, amount: 1 } : null
     },
 
-    generateRandomItem(): Item {
-      const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'] as const
-      const rarity = rarities[Math.floor(Math.random() * rarities.length)]
+    addItemToInventory(newItem: Item) {
+      // Try to find existing item stack
+      const existingItem = this.inventory.find(item => item.id === newItem.id)
 
-      // Base value multiplied by rarity factor
-      const rarityMultiplier = {
-        common: 1,
-        uncommon: 2,
-        rare: 5,
-        epic: 10,
-        legendary: 25,
+      if (existingItem) {
+        existingItem.amount += newItem.amount
+      } else {
+        this.inventory.push(newItem)
+      }
+    },
+
+    sellItem(itemId: string, amount = 1) {
+      const item = this.inventory.find(i => i.id === itemId)
+      if (!item || item.amount < amount) return false
+
+      // Calculate total value
+      const totalValue = item.value * amount
+
+      // Update inventory
+      item.amount -= amount
+      if (item.amount <= 0) {
+        const index = this.inventory.indexOf(item)
+        this.inventory.splice(index, 1)
       }
 
-      return {
-        id: crypto.randomUUID(),
-        name: `${rarity} Item`, // You can add proper name generation later
-        value: Math.floor(Math.random() * 50 + 50) * rarityMultiplier[rarity],
-        rarity,
-      }
+      // Add coins
+      this.coins += totalValue
+      return true
     },
   },
 

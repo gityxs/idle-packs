@@ -47,11 +47,18 @@
           'border-yellow-400': item.rarity === 'legendary',
         }">
           <h3 class="font-bold">{{ item.name }}</h3>
-          <p>Value: {{ item.value }} coins</p>
+          <p>Amount: {{ item.amount }}</p>
+          <p>Value: {{ item.value }} coins each</p>
           <p class="capitalize">Rarity: {{ item.rarity }}</p>
-          <button @click="store.sellItem(item.id)" class="mt-2 px-4 py-2 bg-red-500 text-white rounded">
-            Sell
-          </button>
+          <div class="flex gap-2">
+            <button @click="store.sellItem(item.id, 1)" class="mt-2 px-4 py-2 bg-red-500 text-white rounded">
+              Sell 1
+            </button>
+            <button v-if="item.amount > 1" @click="store.sellItem(item.id, item.amount)"
+              class="mt-2 px-4 py-2 bg-red-700 text-white rounded">
+              Sell All
+            </button>
+          </div>
         </div>
       </div>
     </div>
