@@ -126,6 +126,10 @@ export const useStore = defineStore('main', {
         ],
       },
     ] as Pack[],
+
+    settings: {
+      showAnimations: true,
+    },
   }),
 
   actions: {
@@ -173,7 +177,6 @@ export const useStore = defineStore('main', {
 
       // Open specified number of packs
       for (let i = 0; i < amount; i++) {
-        // Generate random items for each pack
         const numItems = Math.floor(Math.random() * (pack.maxItems - pack.minItems + 1)) + pack.minItems
 
         for (let j = 0; j < numItems; j++) {
@@ -189,8 +192,6 @@ export const useStore = defineStore('main', {
         this.ownedPacks.splice(index, 1)
       }
 
-      // Add all items to inventory (with stacking)
-      allItems.forEach(item => this.addItemToInventory(item))
       return allItems
     },
 
@@ -244,6 +245,14 @@ export const useStore = defineStore('main', {
       // Add coins
       this.coins = this.coins.plus(totalValue)
       return true
+    },
+
+    addItemsToInventory(items: Item[]) {
+      items.forEach(item => this.addItemToInventory(item))
+    },
+
+    toggleAnimations() {
+      this.settings.showAnimations = !this.settings.showAnimations
     },
   },
 

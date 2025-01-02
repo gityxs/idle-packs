@@ -1,9 +1,20 @@
 <template>
   <div class="flex flex-col items-center min-h-screen p-4 gap-6">
     <header class="w-full max-w-4xl mb-6">
-      <h1 class="text-3xl font-bold mb-2">Idle Pack Opening Game</h1>
-      <div class="text-xl">
-        Coins: {{ store.formattedCoins }}
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">Idle Pack Opening Game</h1>
+          <div class="text-xl">
+            Coins: {{ store.formattedCoins }}
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" :checked="store.settings.showAnimations" @change="store.toggleAnimations"
+              class="w-4 h-4">
+            <span class="text-sm">Show Animations</span>
+          </label>
+        </div>
       </div>
     </header>
 
@@ -76,10 +87,10 @@
               <h3 class="font-bold">{{ pack.name }}</h3>
               <p>Amount: {{ pack.amount }}</p>
               <div class="flex gap-2 mt-2">
-                <button @click="store.openPack(pack.id, 1)" class="flex-1 px-4 py-2 bg-green-500 text-white rounded">
+                <button @click="handleOpenPack(pack.id, 1)" class="flex-1 px-4 py-2 bg-green-500 text-white rounded">
                   Open 1
                 </button>
-                <button v-if="pack.amount > 1" @click="store.openPack(pack.id, pack.amount)"
+                <button v-if="pack.amount > 1" @click="handleOpenPack(pack.id, pack.amount)"
                   class="flex-1 px-4 py-2 bg-green-700 text-white rounded">
                   Open All
                 </button>
@@ -120,13 +131,19 @@
         </div>
       </div>
     </div>
+
+    <PackOpeningModal v-if="openingItems.length > 0" :show="true" :items="openingItems" :pack-name="openingPackName"
+      :pack-price="openingPackPrice" :format-number="formatNumber" :show-animations="store.settings.showAnimations"
+      :has-more-packs="hasMorePacksToOpen" :remaining-packs="remainingPacksToOpen" @close="finishOpening"
+      @open-another="openAnotherPack" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useStore } from '../store'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import BigNumber from 'bignumber.js'
+import PackOpeningModal from '../components/PackOpeningModal.vue'
 
 const store = useStore()
 const activeTab = ref('packs')
@@ -184,6 +201,56 @@ const formatNumber = (num: BigNumber | number) => {
   // Format the number
   const formatted = n.dividedBy(new BigNumber(1000).pow(suffixIndex)).toFixed(2)
   return `${formatted}${suffixes[suffixIndex]}`
+}
+
+const openingItems = ref<Item[]>([])
+const openingPackName = ref('')
+const openingPackPrice = ref(0)
+
+const currentOpeningPackId = ref('')
+const remainingPacksToOpen = ref(0)
+
+// Update the pack opening logic
+const handleOpenPack = (packId: string, amount: number) => {
+  const pack = store.ownedPacks.find(p => p.id === packId)
+  if (!pack) return
+
+  currentOpeningPackId.value = packId
+  remainingPacksToOpen.value = amount - 1 // Subtract 1 because we're opening one now
+
+  const items = store.openPack(packId, 1)
+  if (items) {
+    openingItems.value = items
+    openingPackName.value = pack.name
+    const originalPack = store.availablePacks.find(p => p.id === packId)
+    openingPackPrice.value = originalPack?.price ?? 0
+  }
+}
+
+// Check if there are more packs to open
+const hasMorePacksToOpen = computed(() => {
+  const pack = store.ownedPacks.find(p => p.id === currentOpeningPackId.value)
+  return pack ? pack.amount > 0 : false
+})
+
+// Handle opening another pack
+const openAnotherPack = () => {
+  if (remainingPacksToOpen.value > 0) {
+    remainingPacksToOpen.value--
+    handleOpenPack(currentOpeningPackId.value, 1)
+  } else {
+    // Normal single pack opening
+    handleOpenPack(currentOpeningPackId.value, 1)
+  }
+}
+
+const finishOpening = () => {
+  store.addItemsToInventory(openingItems.value)
+  openingItems.value = []
+  openingPackName.value = ''
+  openingPackPrice.value = 0
+  currentOpeningPackId.value = ''
+  remainingPacksToOpen.value = 0 // Reset remaining packs
 }
 
 // Initialize the game when the component is mounted
