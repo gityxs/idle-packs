@@ -43,12 +43,12 @@
           ]">
             Inventory
           </button>
-          <button @click="activeTab = 'generators'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
-            activeTab === 'generators'
+          <button @click="activeTab = 'upgrades'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+            activeTab === 'upgrades'
               ? 'border-b-2 border-blue-500 text-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           ]">
-            Generators
+            Upgrades
           </button>
         </nav>
       </div>
@@ -57,12 +57,25 @@
       <div v-if="activeTab === 'packs'" class="grid grid-cols-1 gap-6">
         <!-- Left Column: Shop -->
         <div>
-          <h2 class="text-xl sm:text-2xl mb-4">Shop</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl sm:text-2xl">Shop</h2>
+          </div>
           <div class="grid gap-4">
             <div v-for="pack in store.availablePacks" :key="pack.id" class="border p-4 rounded-lg min-w-[200px]">
               <h3 class="font-bold">{{ pack.name }}</h3>
               <p>Price: {{ formatNumber(pack.price) }} coins</p>
               <p>Items: {{ pack.minItems }}-{{ pack.maxItems }}</p>
+
+              <!-- Add purchase limit info -->
+              <div v-if="pack.purchaseLimit" class="mt-2 text-sm">
+                <p class="text-gray-600">
+                  Limit: {{ pack.purchaseLimit.remainingPurchases }}/{{ pack.purchaseLimit.amount }}
+                  per {{ pack.purchaseLimit.minutes }} minutes
+                </p>
+                <p v-if="pack.purchaseLimit.remainingPurchases < pack.purchaseLimit.amount" class="text-blue-600">
+                  Resets in {{ formatTime(store.getPackTimeRemaining(pack.id)) }}
+                </p>
+              </div>
 
               <!-- Add buy controls -->
               <div class="flex items-center gap-2 mt-2">
@@ -94,7 +107,12 @@
 
         <!-- Right Column: Owned Packs -->
         <div>
-          <h2 class="text-xl sm:text-2xl mb-4">Your Packs</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl sm:text-2xl mb-4">Your Packs</h2>
+            <div class="text-sm text-gray-600">
+              Pack Storage: {{ store.packStorageUsed }}/{{ store.maxPackStorage }}
+            </div>
+          </div>
           <div class="grid gap-4 min-h-[200px]">
             <div v-for="pack in store.ownedPacks" :key="pack.id" class="border p-4 rounded-lg">
               <h3 class="font-bold">{{ pack.name }}</h3>
@@ -121,36 +139,91 @@
       </div>
 
       <!-- Inventory Tab -->
-      <div v-else-if="activeTab === 'inventory'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div v-for="item in store.inventory" :key="item.id" class="border p-4 rounded-lg" :class="{
-          'border-gray-300': item.rarity === 'common',
-          'border-green-400': item.rarity === 'uncommon',
-          'border-blue-400': item.rarity === 'rare',
-          'border-purple-400': item.rarity === 'epic',
-          'border-yellow-400': item.rarity === 'legendary',
-        }">
-          <h3 class="font-bold">{{ item.name }}</h3>
-          <p>Amount: {{ item.amount }}</p>
-          <p>Value: {{ formatNumber(item.value) }} coins each</p>
-          <p class="capitalize">Rarity: {{ item.rarity }}</p>
-          <div class="flex gap-2 mt-2">
-            <button @click="store.sellItem(item.id, 1)" class="flex-1 px-4 py-2 bg-red-500 text-white rounded">
-              Sell 1
-            </button>
-            <button v-if="item.amount > 1" @click="store.sellItem(item.id, item.amount)"
-              class="flex-1 px-4 py-2 bg-red-700 text-white rounded">
-              Sell All
+      <div v-else-if="activeTab === 'inventory'" class="space-y-6">
+        <!-- Add Equipment Section -->
+        <EquippedItems />
+
+        <!-- Add a divider -->
+        <div class="border-t border-gray-200"></div>
+
+        <!-- Add sorting controls above the inventory grid -->
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl sm:text-2xl">Inventory</h2>
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">Sort by:</label>
+            <select v-model="inventorySort" class="px-2 py-1 border rounded text-sm bg-white">
+              <option value="rarity">Rarity</option>
+              <option value="production">Production</option>
+              <option value="value">Value</option>
+            </select>
+            <button @click="inventorySortDir = inventorySortDir === 'asc' ? 'desc' : 'asc'"
+              class="p-1 rounded hover:bg-gray-100">
+              <span class="text-gray-600">
+                {{ inventorySortDir === 'asc' ? '↑' : '↓' }}
+              </span>
             </button>
           </div>
         </div>
-        <div v-if="!store.inventory.length" class="text-gray-500 text-center p-4 border rounded-lg">
-          No items in inventory
+
+        <!-- Update the inventory grid to use sorted items -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="item in sortedInventory" :key="item.id" class="border p-4 rounded-lg" :class="{
+            'border-gray-300': item.rarity === 'common',
+            'border-green-400': item.rarity === 'uncommon',
+            'border-blue-400': item.rarity === 'rare',
+            'border-purple-400': item.rarity === 'epic',
+            'border-yellow-400': item.rarity === 'legendary',
+          }">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <h3 class="font-bold">{{ item.name }}</h3>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm capitalize" :class="{
+                    'text-gray-600': item.rarity === 'common',
+                    'text-green-600': item.rarity === 'uncommon',
+                    'text-blue-600': item.rarity === 'rare',
+                    'text-purple-600': item.rarity === 'epic',
+                    'text-yellow-600': item.rarity === 'legendary',
+                  }">
+                    {{ item.rarity }}
+                  </p>
+                  <span class="text-sm text-gray-500">
+                    • {{ getItemSlot(item.id) }}
+                  </span>
+                </div>
+              </div>
+              <div class="text-right">
+                <p>Amount: {{ item.amount }}</p>
+                <p>Value: {{ formatNumber(item.value) }} coins each</p>
+              </div>
+            </div>
+
+            <p class="text-green-600 mb-2">+{{ formatNumber(getItemProduction(item.id)) }}/min</p>
+
+            <div class="flex gap-2">
+              <button @click="store.sellItem(item.id, 1)"
+                class="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                Sell 1
+              </button>
+              <button v-if="item.amount > 1" @click="store.sellItem(item.id, item.amount)"
+                class="flex-1 px-4 py-2 bg-red-700 text-white rounded hover:bg-red-700">
+                Sell All
+              </button>
+              <button @click="store.equipItem(item.id)" :disabled="store.equippedItems.length >= store.maxEquippedItems"
+                class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-blue-500">
+                {{ store.equippedItems.length >= store.maxEquippedItems ? 'No Slots' : 'Equip' }}
+              </button>
+            </div>
+          </div>
+          <div v-if="!store.inventory.length" class="text-gray-500 text-center p-4 border rounded-lg">
+            No items in inventory
+          </div>
         </div>
       </div>
 
-      <!-- Generators Tab -->
-      <div v-else-if="activeTab === 'generators'">
-        <Generators />
+      <!-- Add new tab content -->
+      <div v-else-if="activeTab === 'upgrades'">
+        <Upgrades />
       </div>
     </div>
 
@@ -166,8 +239,10 @@ import { useStore } from '../store'
 import { ref, reactive, computed } from 'vue'
 import BigNumber from 'bignumber.js'
 import PackOpeningModal from '../components/PackOpeningModal.vue'
-import Generators from '../components/Generators.vue'
-
+import EquippedItems from '../components/EquippedItems.vue'
+import { itemManager } from '../managers/itemManager'
+import Upgrades from '../components/Upgrades.vue'
+const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')
 
@@ -233,9 +308,6 @@ const openingPackPrice = ref(0)
 const currentOpeningPackId = ref('')
 const remainingPacksToOpen = ref(0)
 
-// Add these constants
-const MAX_PACKS_PER_OPEN = 1000
-
 // Update the hasMorePacksToOpen computed property
 const hasMorePacksToOpen = computed(() => {
   const pack = store.ownedPacks.find(p => p.id === currentOpeningPackId.value)
@@ -290,6 +362,74 @@ const sellAllItems = () => {
   store.sellAllItems()
 }
 
+const getItemProduction = (itemId: string) => {
+  const definition = itemManager.getItem(itemId)
+  return definition ? new BigNumber(definition.coinsPerMinute) : new BigNumber(0)
+}
+
+const getItemSlot = (itemId: string) => {
+  const definition = itemManager.getItem(itemId)
+  return definition?.slot ? definition.slot.charAt(0).toUpperCase() + definition.slot.slice(1) : ''
+}
+
+const isSlotOccupied = (itemId: string) => {
+  const definition = itemManager.getItem(itemId)
+  if (!definition) return true
+  return store.equippedItems[definition.slot] !== null
+}
+
 // Initialize the game when the component is mounted
 store.initApp()
+
+// Add helper function for time formatting
+const formatTime = (ms: number | null) => {
+  if (ms === null) return ''
+
+  const seconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
+
+// Add sorting state
+const inventorySort = ref('rarity')
+const inventorySortDir = ref('desc')
+
+// Add sorting logic
+const rarityOrder = {
+  common: 0,
+  uncommon: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+}
+
+const sortedInventory = computed(() => {
+  const items = [...store.inventory]
+
+  items.sort((a, b) => {
+    let comparison = 0
+
+    switch (inventorySort.value) {
+      case 'rarity':
+        comparison = rarityOrder[b.rarity] - rarityOrder[a.rarity]
+        break
+
+      case 'production':
+        const prodA = getItemProduction(a.id)
+        const prodB = getItemProduction(b.id)
+        comparison = prodB.minus(prodA).toNumber()
+        break
+
+      case 'value':
+        comparison = b.value.minus(a.value).toNumber()
+        break
+    }
+
+    return inventorySortDir.value === 'asc' ? -comparison : comparison
+  })
+
+  return items
+})
 </script>
