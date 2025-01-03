@@ -10,6 +10,7 @@ declare module 'vue' {
     Collection: typeof import('./src/components/Collection.vue')['default']
     EquippedItems: typeof import('./src/components/EquippedItems.vue')['default']
     Generators: typeof import('./src/components/Generators.vue')['default']
+    PackDetailsModal: typeof import('./src/components/PackDetailsModal.vue')['default']
     PackOpeningModal: typeof import('./src/components/PackOpeningModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

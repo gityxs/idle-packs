@@ -68,7 +68,9 @@
             <h2 class="text-xl sm:text-2xl">Shop</h2>
           </div>
           <div class="grid gap-4">
-            <div v-for="pack in store.availablePacks" :key="pack.id" class="border p-4 rounded-lg min-w-[200px]">
+            <div v-for="pack in store.availablePacks" :key="pack.id"
+              class="border p-4 rounded-lg min-w-[200px] cursor-pointer hover:bg-gray-50"
+              @click.prevent="selectedPack = pack">
               <h3 class="font-bold">{{ pack.name }}</h3>
               <p>Price: {{ formatNumber(pack.price) }} coins</p>
               <p>Items: {{ pack.minItems }}-{{ pack.maxItems }}</p>
@@ -87,17 +89,17 @@
               <!-- Add buy controls -->
               <div class="flex items-center gap-2 mt-2">
                 <input type="number" v-model="buyAmounts[pack.id]" min="1" :max="store.getMaxBuyable(pack.id)"
-                  class="w-20 px-2 py-1 border rounded">
+                  class="w-20 px-2 py-1 border rounded" @click.stop>
                 <div class="flex-1 flex gap-1">
-                  <button @click="buyPack(pack.id, 1)" :disabled="!store.canBuyPack(pack.id)"
+                  <button @click.stop="buyPack(pack.id, 1)" :disabled="!store.canBuyPack(pack.id)"
                     class="flex-1 px-2 py-1 bg-blue-500 text-white text-sm rounded disabled:opacity-50">
                     Buy 1
                   </button>
-                  <button @click="buyPack(pack.id, buyAmounts[pack.id])" :disabled="!canBuyAmount(pack.id)"
+                  <button @click.stop="buyPack(pack.id, buyAmounts[pack.id])" :disabled="!canBuyAmount(pack.id)"
                     class="flex-1 px-2 py-1 bg-blue-600 text-white text-sm rounded disabled:opacity-50">
                     Buy X
                   </button>
-                  <button @click="buyMax(pack.id)" :disabled="!store.canBuyPack(pack.id)"
+                  <button @click.stop="buyMax(pack.id)" :disabled="!store.canBuyPack(pack.id)"
                     class="flex-1 px-2 py-1 bg-blue-700 text-white text-sm rounded disabled:opacity-50">
                     Max
                   </button>
@@ -243,6 +245,8 @@
       :pack-price="openingPackPrice" :format-number="formatNumber" :show-animations="store.settings.showAnimations"
       :has-more-packs="hasMorePacksToOpen" :remaining-packs="remainingPacksToOpen" @close="finishOpening"
       @open-another="openAnotherPack" />
+
+    <PackDetailsModal v-if="selectedPack" :pack="selectedPack" @close="selectedPack = null" />
   </div>
 </template>
 
@@ -255,6 +259,7 @@ import EquippedItems from '../components/EquippedItems.vue'
 import { itemManager } from '../managers/itemManager'
 import Upgrades from '../components/Upgrades.vue'
 import Collection from '../components/Collection.vue'
+import PackDetailsModal from '../components/PackDetailsModal.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')
@@ -445,4 +450,7 @@ const sortedInventory = computed(() => {
 
   return items
 })
+
+// Add state for selected pack
+const selectedPack = ref(null)
 </script>

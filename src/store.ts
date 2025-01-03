@@ -17,7 +17,7 @@ interface PackPurchaseLimit {
   remainingPurchases: number
 }
 
-interface Pack {
+export interface Pack {
   id: string
   name: string
   price: number
@@ -66,8 +66,8 @@ export const useStore = defineStore('main', {
     // Available packs in the shop
     availablePacks: [
       {
-        id: 'basic-pack',
-        name: 'Basic Pack',
+        id: 'morty-pack',
+        name: 'Morty Pack',
         price: 75,
         minItems: 3,
         maxItems: 5,
@@ -126,25 +126,25 @@ export const useStore = defineStore('main', {
         packId: '',
       },
       {
-        id: 'basic-pack-limit',
-        name: 'Basic Pack Capacity',
-        description: 'Increase purchase limit of Basic Pack by 2',
+        id: 'morty-pack-limit',
+        name: 'Morty Pack Capacity',
+        description: 'Increase purchase limit of Morty Pack by 2',
         basePrice: 1000,
         priceMultiplier: 1.5,
         level: 0,
         type: 'packLimit',
-        packId: 'basic-pack',
+        packId: 'morty-pack',
       },
       {
-        id: 'basic-pack-timer',
-        name: 'Basic Pack Efficiency',
-        description: 'Reduce Basic Pack reset time by 10%',
+        id: 'morty-pack-timer',
+        name: 'Morty Pack Efficiency',
+        description: 'Reduce Morty Pack reset time by 10%',
         basePrice: 2000,
         priceMultiplier: 2,
         level: 0,
         maxLevel: 5,
         type: 'packTimer',
-        packId: 'basic-pack',
+        packId: 'morty-pack',
       },
     ] as Upgrade[],
 
@@ -426,7 +426,7 @@ export const useStore = defineStore('main', {
       if (!pack?.purchaseLimit) return
 
       if (upgrade.type === 'packLimit') {
-        const increaseAmount = upgrade.packId === 'basic-pack' ? 2 : 1
+        const increaseAmount = upgrade.packId === 'morty-pack' ? 2 : 1
         pack.purchaseLimit.amount += increaseAmount
         pack.purchaseLimit.remainingPurchases = pack.purchaseLimit.amount
       } else if (upgrade.type === 'packTimer') {
