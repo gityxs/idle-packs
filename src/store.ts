@@ -233,6 +233,10 @@ export const useStore = defineStore('main', {
       if (!this.loadFromLocalStorage()) {
         // If no save found, start new game
         this.coins = new BigNumber(500)
+        this.lastUpdate = Date.now()
+      } else {
+        // Calculate offline progress after loading save
+        this.calculateOfflineProgress()
       }
 
       this.isInitialized = true
@@ -569,6 +573,7 @@ export const useStore = defineStore('main', {
         maxPackStorage: this.maxPackStorage,
         upgrades: this.upgrades,
         discoveredItems: Array.from(this.discoveredItems),
+        lastUpdate: this.lastUpdate,
       }
     },
 
@@ -632,8 +637,8 @@ export const useStore = defineStore('main', {
         // Load discovered items
         this.discoveredItems = new Set(saveData.discoveredItems)
 
-        // Update last update time
-        this.lastUpdate = Date.now()
+        // Load last update time
+        this.lastUpdate = saveData.lastUpdate || Date.now()
 
         console.log('Save data loaded successfully')
       } catch (error) {
@@ -644,11 +649,13 @@ export const useStore = defineStore('main', {
 
     saveToLocalStorage() {
       try {
-        const saveData = this.getSaveData()
+        const saveData = {
+          ...this.getSaveData(),
+          lastUpdate: Date.now(),
+        }
         localStorage.setItem('gameState', JSON.stringify(saveData))
         localStorage.setItem('lastSaved', Date.now().toString())
 
-        // Dispatch event for UI updates
         window.dispatchEvent(new Event('gameSaved'))
       } catch (error) {
         console.error('Failed to save game:', error)
@@ -672,6 +679,45 @@ export const useStore = defineStore('main', {
       localStorage.removeItem('gameState')
       localStorage.removeItem('lastSaved')
       window.location.reload()
+    },
+
+    calculateOfflineProgress() {
+      const now = Date.now()
+      const timeDiff = now - this.lastUpdate
+
+      if (timeDiff <= 0) return
+
+      // Calculate offline coins from equipped items
+      const minutesOffline = timeDiff / (1000 * 60)
+      const productionPerMinute = this.totalProduction
+      const offlineEarnings = productionPerMinute.times(minutesOffline)
+
+      // Add offline earnings
+      if (offlineEarnings.isGreaterThan(0)) {
+        this.coins = this.coins.plus(offlineEarnings)
+
+        // Show notification of offline earnings
+        const formattedEarnings = formatNumber(offlineEarnings)
+        const formattedMinutes = Math.floor(minutesOffline)
+        console.log(`Earned ${formattedEarnings} coins while away for ${formattedMinutes} minutes!`)
+      }
+
+      // Update pack purchase limits
+      this.availablePacks.forEach(pack => {
+        if (pack.purchaseLimit) {
+          const resetTime = pack.purchaseLimit.minutes * 60 * 1000
+          const resetsPossible = Math.floor((now - pack.purchaseLimit.lastPurchaseTime) / resetTime)
+
+          if (resetsPossible > 0) {
+            // Reset purchase limit
+            pack.purchaseLimit.remainingPurchases = pack.purchaseLimit.amount
+            pack.purchaseLimit.lastPurchaseTime = now - ((now - pack.purchaseLimit.lastPurchaseTime) % resetTime)
+          }
+        }
+      })
+
+      // Update last update time
+      this.lastUpdate = now
     },
   },
 
