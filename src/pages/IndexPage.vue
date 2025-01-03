@@ -261,10 +261,13 @@
       </div>
     </div>
 
-    <PackOpeningModal v-if="openingItems.length > 0" :show="true" :items="openingItems" :pack-name="openingPackName"
-      :pack-price="openingPackPrice" :format-number="formatNumber" :show-animations="store.settings.showAnimations"
-      :has-more-packs="hasMorePacksToOpen" :remaining-packs="remainingPacksToOpen" @close="finishOpening"
-      @open-another="openAnotherPack" />
+    <!-- Add footer at the bottom -->
+    <Footer />
+
+    <!-- Keep modals outside the main layout -->
+    <PackOpeningModal v-if="openingItems.length" :items="openingItems" :pack-name="openingPackName"
+      :pack-price="openingPackPrice" :has-more-packs="hasMorePacksToOpen" :remaining-packs="remainingPacksToOpen"
+      @close="finishOpening" @open-another="openAnotherPack" />
 
     <PackDetailsModal v-if="selectedPack" :pack="selectedPack" @close="selectedPack = null" />
   </div>
@@ -281,6 +284,7 @@ import Upgrades from '../components/Upgrades.vue'
 import Collection from '../components/Collection.vue'
 import PackDetailsModal from '../components/PackDetailsModal.vue'
 import SaveLoadMenu from '../components/SaveLoadMenu.vue'
+import Footer from '../components/Footer.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')
