@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import BigNumber from 'bignumber.js'
-import { itemManager, type ItemDrop } from './managers/itemManager'
+import { itemManager, type ItemDefinition, type ItemDrop } from './managers/itemManager'
 
 interface Item {
   id: string
@@ -117,6 +117,29 @@ export const useStore = defineStore('main', {
           minutes: 15,
           lastPurchaseTime: 0,
           remainingPurchases: 6,
+        },
+        hasAutoBuyer: false,
+        autoBuyEnabled: false,
+      },
+      {
+        id: 'daily-pack',
+        name: 'Daily Pack',
+        price: 0,
+        minItems: 1,
+        maxItems: 3,
+        possibleItems: [
+          { itemId: 'chromatic-egg', dropChance: 30 },
+          { itemId: 'mega-morty-plush', dropChance: 30 },
+          { itemId: 'dream-eater', dropChance: 20 },
+          { itemId: 'galactic-portal', dropChance: 10 },
+          { itemId: 'infinity-ant', dropChance: 9 },
+          { itemId: 'rainbow-dracelium', dropChance: 1 },
+        ],
+        purchaseLimit: {
+          amount: 1,
+          minutes: 24 * 60,
+          lastPurchaseTime: 0,
+          remainingPurchases: 1,
         },
         hasAutoBuyer: false,
         autoBuyEnabled: false,
@@ -719,6 +742,40 @@ export const useStore = defineStore('main', {
       // Update last update time
       this.lastUpdate = now
     },
+
+    calculateSynergyBonus(item: ItemDefinition): number {
+      if (!item.synergyEffect) return 0
+
+      const { condition } = item.synergyEffect
+
+      switch (condition.type) {
+        case 'itemType':
+          const typesArray = Array.isArray(condition.value) ? condition.value : [condition.value]
+          const matchingItems = this.equippedItems.filter(equipped => {
+            const def = itemManager.getItem(equipped.id)
+            return def?.types?.some(type => typesArray.includes(type))
+          })
+          return matchingItems.length * item.synergyEffect.bonus
+
+        case 'specificItem':
+          const hasItem = this.equippedItems.some(equipped => equipped.id === condition.value)
+          return hasItem ? item.synergyEffect.bonus : 0
+
+        case 'itemCount':
+          const types = Array.isArray(condition.value) ? condition.value : [condition.value]
+          const counts = types.map(
+            type =>
+              this.equippedItems.filter(equipped => {
+                const def = itemManager.getItem(equipped.id)
+                return def?.types?.includes(type as ItemType)
+              }).length
+          )
+          return counts.every(count => count >= (condition.minCount || 1)) ? item.synergyEffect.bonus : 0
+
+        default:
+          return 0
+      }
+    },
   },
 
   getters: {
@@ -735,7 +792,16 @@ export const useStore = defineStore('main', {
       return this.equippedItems.reduce((total, item) => {
         const definition = itemManager.getItem(item.id)
         if (!definition) return total
-        return total.plus(new BigNumber(definition.coinsPerMinute))
+
+        let production = new BigNumber(definition.coinsPerMinute)
+
+        // Apply synergy effects
+        if (definition.synergyEffect && definition.synergyEffect.type === 'coinGen') {
+          const bonus = useStore().calculateSynergyBonus(definition)
+          production = production.times(new BigNumber(1).plus(bonus))
+        }
+
+        return total.plus(production)
       }, new BigNumber(0))
     },
 

@@ -90,7 +90,9 @@
               <div v-if="pack.purchaseLimit" class="mt-2 text-sm">
                 <p class="text-gray-600">
                   Limit: {{ pack.purchaseLimit.remainingPurchases }}/{{ pack.purchaseLimit.amount }}
-                  per {{ pack.purchaseLimit.minutes }} minutes
+                  per {{ pack.purchaseLimit.minutes >= 1440 ? Math.floor(pack.purchaseLimit.minutes / 1440) + ' days' :
+                    pack.purchaseLimit.minutes >= 60 ? Math.floor(pack.purchaseLimit.minutes / 60) + ' hours' :
+                      pack.purchaseLimit.minutes + ' minutes' }}
                 </p>
                 <p v-if="pack.purchaseLimit.remainingPurchases < pack.purchaseLimit.amount" class="text-blue-600">
                   Resets in {{ formatTime(store.getPackTimeRemaining(pack.id)) }}
@@ -196,7 +198,7 @@
 
         <!-- Update the inventory grid to use sorted items -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div v-for="item in sortedInventory" :key="item.id" class="border p-4 rounded-lg" :class="{
+          <div v-for="item in sortedInventory" :key="item.id" class="border rounded-lg p-4" :class="{
             'border-gray-300': item.rarity === 'common',
             'border-green-400': item.rarity === 'uncommon',
             'border-blue-400': item.rarity === 'rare',
@@ -206,7 +208,7 @@
             <div class="flex justify-between items-start mb-2">
               <div>
                 <h3 class="font-bold">{{ item.name }}</h3>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2 mt-1">
                   <p class="text-sm capitalize" :class="{
                     'text-gray-600': item.rarity === 'common',
                     'text-green-600': item.rarity === 'uncommon',
@@ -216,6 +218,10 @@
                   }">
                     {{ item.rarity }}
                   </p>
+                  <!-- Add type chips -->
+                  <div class="flex flex-wrap gap-1">
+                    <TypeChip v-for="type in itemManager.getItem(item.id)?.types" :key="type" :type="type" />
+                  </div>
                   <span class="text-sm text-gray-500">
                     • {{ getItemSlot(item.id) }}
                   </span>
@@ -243,6 +249,9 @@
                 {{ store.equippedItems.length >= store.maxEquippedItems ? 'No Slots' : 'Equip' }}
               </button>
             </div>
+
+            <!-- Add synergy info -->
+            <SynergyInfo v-if="itemManager.getItem(item.id)" :item="itemManager.getItem(item.id)!" />
           </div>
           <div v-if="!store.inventory.length" class="text-gray-500 text-center p-4 border rounded-lg">
             No items in inventory
@@ -283,6 +292,8 @@ import Upgrades from '../components/Upgrades.vue'
 import Collection from '../components/Collection.vue'
 import PackDetailsModal from '../components/PackDetailsModal.vue'
 import SaveLoadMenu from '../components/SaveLoadMenu.vue'
+import SynergyInfo from '../components/SynergyInfo.vue'
+import TypeChip from '../components/TypeChip.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')
@@ -428,9 +439,20 @@ const formatTime = (ms: number | null) => {
 
   const seconds = Math.floor(ms / 1000)
   const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  const remainingHours = hours % 24
+  const remainingMinutes = minutes % 60
   const remainingSeconds = seconds % 60
 
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  if (days > 0) {
+    return `${days}d ${remainingHours}h ${remainingMinutes}m`
+  } else if (hours > 0) {
+    return `${hours}h ${remainingMinutes}m ${remainingSeconds}s`
+  } else {
+    return `${minutes}m ${remainingSeconds}s`
+  }
 }
 
 // Add sorting state
