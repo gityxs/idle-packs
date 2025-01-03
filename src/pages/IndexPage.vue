@@ -50,6 +50,13 @@
           ]">
             Upgrades
           </button>
+          <button @click="activeTab = 'collection'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+            activeTab === 'collection'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+            Collection
+          </button>
         </nav>
       </div>
 
@@ -225,6 +232,11 @@
       <div v-else-if="activeTab === 'upgrades'">
         <Upgrades />
       </div>
+
+      <!-- Add new tab content -->
+      <div v-else-if="activeTab === 'collection'">
+        <Collection />
+      </div>
     </div>
 
     <PackOpeningModal v-if="openingItems.length > 0" :show="true" :items="openingItems" :pack-name="openingPackName"
@@ -242,6 +254,7 @@ import PackOpeningModal from '../components/PackOpeningModal.vue'
 import EquippedItems from '../components/EquippedItems.vue'
 import { itemManager } from '../managers/itemManager'
 import Upgrades from '../components/Upgrades.vue'
+import Collection from '../components/Collection.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')

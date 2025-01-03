@@ -133,6 +133,10 @@ export class ItemManager {
 
     return null
   }
+
+  getAllItems(): Map<string, ItemDefinition> {
+    return this.items
+  }
 }
 
 export const itemManager = new ItemManager()

@@ -147,6 +147,8 @@ export const useStore = defineStore('main', {
         packId: 'basic-pack',
       },
     ] as Upgrade[],
+
+    discoveredItems: new Set<string>(),
   }),
 
   actions: {
@@ -161,6 +163,7 @@ export const useStore = defineStore('main', {
       }, 1000)
 
       console.log('Game initialized!')
+      this.discoveredItems = new Set()
     },
 
     buyPack(packId: string, amount = 1) {
@@ -296,7 +299,10 @@ export const useStore = defineStore('main', {
     },
 
     addItemsToInventory(items: Item[]) {
-      items.forEach(item => this.addItemToInventory(item))
+      items.forEach(item => {
+        this.discoveredItems.add(item.id)
+        this.addItemToInventory(item)
+      })
     },
 
     toggleAnimations() {
@@ -426,6 +432,12 @@ export const useStore = defineStore('main', {
       } else if (upgrade.type === 'packTimer') {
         pack.purchaseLimit.minutes = Math.max(1, Math.floor(pack.purchaseLimit.minutes * 0.9))
       }
+    },
+
+    hasAllItemsOfRarity(rarity: string): boolean {
+      const allItemsOfRarity = Array.from(itemManager.getAllItems().values()).filter(item => item.rarity === rarity)
+
+      return allItemsOfRarity.every(item => this.discoveredItems.has(item.id))
     },
   },
 

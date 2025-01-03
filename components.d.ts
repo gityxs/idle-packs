@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Collection: typeof import('./src/components/Collection.vue')['default']
     EquippedItems: typeof import('./src/components/EquippedItems.vue')['default']
     Generators: typeof import('./src/components/Generators.vue')['default']
     PackOpeningModal: typeof import('./src/components/PackOpeningModal.vue')['default']
