@@ -94,6 +94,33 @@ export const useStore = defineStore('main', {
         hasAutoBuyer: false,
         autoBuyEnabled: false,
       },
+      {
+        id: 'fakemon-pack',
+        name: 'Fakemon Pack',
+        price: 250,
+        minItems: 2,
+        maxItems: 4,
+        possibleItems: [
+          { itemId: 'embermouse', dropChance: 20 },
+          { itemId: 'leafling', dropChance: 20 },
+          { itemId: 'bubbird', dropChance: 20 },
+          { itemId: 'sparkynx', dropChance: 8.33 },
+          { itemId: 'terracottaur', dropChance: 8.33 },
+          { itemId: 'flickit', dropChance: 8.34 },
+          { itemId: 'crystallus', dropChance: 5 },
+          { itemId: 'pyroqueen', dropChance: 1 },
+          { itemId: 'dracelium', dropChance: 0.2 },
+          { itemId: 'astragonia', dropChance: 0.05 },
+        ],
+        purchaseLimit: {
+          amount: 6,
+          minutes: 15,
+          lastPurchaseTime: 0,
+          remainingPurchases: 6,
+        },
+        hasAutoBuyer: false,
+        autoBuyEnabled: false,
+      },
     ] as Pack[],
 
     settings: {
@@ -161,25 +188,68 @@ export const useStore = defineStore('main', {
         type: 'autoBuy',
         packId: 'morty-pack',
       },
+      {
+        id: 'fakemon-pack-limit',
+        name: 'Fakemon Pack Capacity',
+        description: 'Increase purchase limit of Fakemon Pack by 2',
+        basePrice: 2500,
+        priceMultiplier: 1.5,
+        level: 0,
+        type: 'packLimit',
+        packId: 'fakemon-pack',
+      },
+      {
+        id: 'fakemon-pack-timer',
+        name: 'Fakemon Pack Efficiency',
+        description: 'Reduce Fakemon Pack reset time by 10%',
+        basePrice: 5000,
+        priceMultiplier: 2,
+        level: 0,
+        maxLevel: 5,
+        type: 'packTimer',
+        packId: 'fakemon-pack',
+      },
+      {
+        id: 'fakemon-pack-auto',
+        name: 'Fakemon Pack Auto-Buyer',
+        description: 'Unlock automatic purchasing for Fakemon Pack',
+        basePrice: 25000,
+        priceMultiplier: 1,
+        level: 0,
+        maxLevel: 1,
+        type: 'autoBuy',
+        packId: 'fakemon-pack',
+      },
     ] as Upgrade[],
 
     discoveredItems: new Set<string>(),
+
+    autoSaveInterval: 60000, // Save every minute
   }),
 
   actions: {
     initApp() {
-      this.isInitialized = true
-      this.coins = new BigNumber(500)
+      // Try to load saved game first
+      if (!this.loadFromLocalStorage()) {
+        // If no save found, start new game
+        this.coins = new BigNumber(500)
+      }
 
-      // Start production interval and purchase limit updates every 1 second
+      this.isInitialized = true
+
+      // Start intervals
       setInterval(() => {
         this.updateProduction()
         this.updatePurchaseLimits()
         this.tryAutoBuyPacks()
       }, 1000)
 
+      // Add auto-save interval
+      setInterval(() => {
+        this.saveToLocalStorage()
+      }, this.autoSaveInterval)
+
       console.log('Game initialized!')
-      this.discoveredItems = new Set()
     },
 
     buyPack(packId: string, amount = 1) {
@@ -479,6 +549,129 @@ export const useStore = defineStore('main', {
           }
         }
       }
+    },
+
+    getSaveData() {
+      return {
+        coins: this.coins.toString(),
+        inventory: this.inventory.map(item => ({
+          ...item,
+          value: item.value.toString(),
+        })),
+        ownedPacks: this.ownedPacks,
+        availablePacks: this.availablePacks,
+        settings: this.settings,
+        equippedItems: this.equippedItems.map(item => ({
+          ...item,
+          value: item.value.toString(),
+        })),
+        maxEquippedItems: this.maxEquippedItems,
+        maxPackStorage: this.maxPackStorage,
+        upgrades: this.upgrades,
+        discoveredItems: Array.from(this.discoveredItems),
+      }
+    },
+
+    loadSaveData(saveData: any) {
+      try {
+        // Load basic values
+        this.coins = new BigNumber(saveData.coins)
+        this.maxEquippedItems = saveData.maxEquippedItems
+        this.maxPackStorage = saveData.maxPackStorage
+        this.settings = saveData.settings
+
+        // Load inventory with BigNumber conversion
+        this.inventory = saveData.inventory.map((item: any) => ({
+          ...item,
+          value: new BigNumber(item.value),
+        }))
+
+        // Load equipped items with BigNumber conversion
+        this.equippedItems = saveData.equippedItems.map((item: any) => ({
+          ...item,
+          value: new BigNumber(item.value),
+        }))
+
+        // Load owned packs
+        this.ownedPacks = saveData.ownedPacks
+
+        // Merge available packs with new content
+        const defaultState = useStore().$state
+        this.availablePacks = defaultState.availablePacks.map(defaultPack => {
+          const savedPack = saveData.availablePacks.find((p: Pack) => p.id === defaultPack.id)
+          if (savedPack) {
+            // Preserve saved state but ensure all properties exist
+            return {
+              ...defaultPack,
+              ...savedPack,
+              // Ensure purchase limit is properly merged
+              purchaseLimit: savedPack.purchaseLimit
+                ? {
+                    ...defaultPack.purchaseLimit,
+                    ...savedPack.purchaseLimit,
+                  }
+                : defaultPack.purchaseLimit,
+            }
+          }
+          return defaultPack // Use default for new packs
+        })
+
+        // Merge upgrades with new content
+        this.upgrades = defaultState.upgrades.map(defaultUpgrade => {
+          const savedUpgrade = saveData.upgrades.find((u: Upgrade) => u.id === defaultUpgrade.id)
+          if (savedUpgrade) {
+            // Preserve saved state but ensure all properties exist
+            return {
+              ...defaultUpgrade,
+              ...savedUpgrade,
+            }
+          }
+          return defaultUpgrade // Use default for new upgrades
+        })
+
+        // Load discovered items
+        this.discoveredItems = new Set(saveData.discoveredItems)
+
+        // Update last update time
+        this.lastUpdate = Date.now()
+
+        console.log('Save data loaded successfully')
+      } catch (error) {
+        console.error('Failed to load save data:', error)
+        throw new Error('Invalid save data')
+      }
+    },
+
+    saveToLocalStorage() {
+      try {
+        const saveData = this.getSaveData()
+        localStorage.setItem('gameState', JSON.stringify(saveData))
+        localStorage.setItem('lastSaved', Date.now().toString())
+
+        // Dispatch event for UI updates
+        window.dispatchEvent(new Event('gameSaved'))
+      } catch (error) {
+        console.error('Failed to save game:', error)
+      }
+    },
+
+    loadFromLocalStorage() {
+      try {
+        const savedState = localStorage.getItem('gameState')
+        if (savedState) {
+          this.loadSaveData(JSON.parse(savedState))
+          return true
+        }
+      } catch (error) {
+        console.error('Failed to load saved game:', error)
+      }
+      return false
+    },
+
+    resetGame() {
+      localStorage.removeItem('gameState')
+      localStorage.removeItem('lastSaved')
+      window.location.reload()
     },
   },
 

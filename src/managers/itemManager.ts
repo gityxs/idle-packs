@@ -99,6 +99,87 @@ export class ItemManager {
       rarity: 'epic',
       coinsPerMinute: 1800, // 30 * 60
     })
+
+    // Fakemon Items
+    this.registerItem({
+      id: 'embermouse',
+      name: 'Embermouse',
+      value: 15,
+      rarity: 'common',
+      coinsPerMinute: 20,
+    })
+
+    this.registerItem({
+      id: 'leafling',
+      name: 'Leafling',
+      value: 15,
+      rarity: 'common',
+      coinsPerMinute: 20,
+    })
+
+    this.registerItem({
+      id: 'bubbird',
+      name: 'Bubbird',
+      value: 15,
+      rarity: 'common',
+      coinsPerMinute: 20,
+    })
+
+    this.registerItem({
+      id: 'sparkynx',
+      name: 'Sparkynx',
+      value: 40,
+      rarity: 'uncommon',
+      coinsPerMinute: 80,
+    })
+
+    this.registerItem({
+      id: 'terracottaur',
+      name: 'Terracottaur',
+      value: 40,
+      rarity: 'uncommon',
+      coinsPerMinute: 80,
+    })
+
+    this.registerItem({
+      id: 'flickit',
+      name: 'Flickit',
+      value: 40,
+      rarity: 'uncommon',
+      coinsPerMinute: 80,
+    })
+
+    this.registerItem({
+      id: 'crystallus',
+      name: 'Crystallus',
+      value: 100,
+      rarity: 'rare',
+      coinsPerMinute: 300,
+    })
+
+    this.registerItem({
+      id: 'pyroqueen',
+      name: 'Pyroqueen',
+      value: 100,
+      rarity: 'rare',
+      coinsPerMinute: 500,
+    })
+
+    this.registerItem({
+      id: 'dracelium',
+      name: 'Dracelium',
+      value: 400,
+      rarity: 'epic',
+      coinsPerMinute: 1200,
+    })
+
+    this.registerItem({
+      id: 'astragonia',
+      name: 'Astragonia',
+      value: 1000,
+      rarity: 'legendary',
+      coinsPerMinute: 3000,
+    })
   }
 
   registerItem(item: ItemDefinition) {

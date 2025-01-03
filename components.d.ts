@@ -14,6 +14,7 @@ declare module 'vue' {
     PackOpeningModal: typeof import('./src/components/PackOpeningModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SaveLoadMenu: typeof import('./src/components/SaveLoadMenu.vue')['default']
     Upgrades: typeof import('./src/components/Upgrades.vue')['default']
   }
 }

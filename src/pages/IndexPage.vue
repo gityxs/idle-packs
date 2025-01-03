@@ -10,17 +10,21 @@
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-end">
-        <button v-if="store.inventory.length > 0" @click="sellAllItems"
-          class="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center gap-2">
-          <span>Sell All ({{ formatNumber(totalInventoryValue) }})</span>
-        </button>
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+        <SaveLoadMenu />
 
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" :checked="store.settings.showAnimations" @change="store.toggleAnimations"
-            class="w-4 h-4">
-          <span class="text-sm">Show Animations</span>
-        </label>
+        <div class="flex gap-3">
+          <button v-if="store.inventory.length > 0" @click="sellAllItems"
+            class="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center gap-2">
+            <span>Sell All ({{ formatNumber(totalInventoryValue) }})</span>
+          </button>
+
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" :checked="store.settings.showAnimations" @change="store.toggleAnimations"
+              class="w-4 h-4">
+            <span class="text-sm">Show Animations</span>
+          </label>
+        </div>
       </div>
     </header>
 
@@ -276,6 +280,7 @@ import { itemManager } from '../managers/itemManager'
 import Upgrades from '../components/Upgrades.vue'
 import Collection from '../components/Collection.vue'
 import PackDetailsModal from '../components/PackDetailsModal.vue'
+import SaveLoadMenu from '../components/SaveLoadMenu.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')
