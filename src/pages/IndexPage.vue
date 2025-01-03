@@ -66,6 +66,13 @@
         <div>
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl sm:text-2xl">Shop</h2>
+            <div v-if="store.hasAutoBuyer" class="flex items-center gap-2">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" :checked="store.settings.autoBuyPacks" @change="store.toggleAutoBuy()"
+                  class="w-4 h-4">
+                <span class="text-sm">Auto Buy Packs</span>
+              </label>
+            </div>
           </div>
           <div class="grid gap-4">
             <div v-for="pack in store.availablePacks" :key="pack.id"
@@ -84,6 +91,15 @@
                 <p v-if="pack.purchaseLimit.remainingPurchases < pack.purchaseLimit.amount" class="text-blue-600">
                   Resets in {{ formatTime(store.getPackTimeRemaining(pack.id)) }}
                 </p>
+              </div>
+
+              <!-- Add auto-buy toggle -->
+              <div v-if="pack.hasAutoBuyer" class="mt-2 flex items-center gap-2">
+                <label class="flex items-center gap-2 cursor-pointer" @click.stop>
+                  <input type="checkbox" :checked="pack.autoBuyEnabled" @change="store.toggleAutoBuy(pack.id)"
+                    class="w-4 h-4">
+                  <span class="text-sm">Auto Buy</span>
+                </label>
               </div>
 
               <!-- Add buy controls -->

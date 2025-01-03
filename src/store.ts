@@ -25,6 +25,8 @@ export interface Pack {
   maxItems: number
   possibleItems: ItemDrop[]
   purchaseLimit?: PackPurchaseLimit
+  hasAutoBuyer: boolean
+  autoBuyEnabled: boolean
 }
 
 interface OwnedPack extends Pack {
@@ -40,7 +42,7 @@ interface Upgrade {
   priceMultiplier: number
   level: number
   maxLevel?: number
-  type: 'packLimit' | 'packTimer' | 'storage' | 'equipmentSlot'
+  type: 'packLimit' | 'packTimer' | 'storage' | 'equipmentSlot' | 'autoBuy'
   packId: string
 }
 
@@ -89,6 +91,8 @@ export const useStore = defineStore('main', {
           lastPurchaseTime: 0,
           remainingPurchases: 10,
         },
+        hasAutoBuyer: false,
+        autoBuyEnabled: false,
       },
     ] as Pack[],
 
@@ -146,6 +150,17 @@ export const useStore = defineStore('main', {
         type: 'packTimer',
         packId: 'morty-pack',
       },
+      {
+        id: 'morty-pack-auto',
+        name: 'Morty Pack Auto-Buyer',
+        description: 'Unlock automatic purchasing for Morty Pack',
+        basePrice: 10000,
+        priceMultiplier: 1,
+        level: 0,
+        maxLevel: 1,
+        type: 'autoBuy',
+        packId: 'morty-pack',
+      },
     ] as Upgrade[],
 
     discoveredItems: new Set<string>(),
@@ -156,10 +171,11 @@ export const useStore = defineStore('main', {
       this.isInitialized = true
       this.coins = new BigNumber(500)
 
-      // Start production interval and purchase limit updates
+      // Start production interval and purchase limit updates every 1 second
       setInterval(() => {
         this.updateProduction()
         this.updatePurchaseLimits()
+        this.tryAutoBuyPacks()
       }, 1000)
 
       console.log('Game initialized!')
@@ -432,12 +448,37 @@ export const useStore = defineStore('main', {
       } else if (upgrade.type === 'packTimer') {
         pack.purchaseLimit.minutes = Math.max(1, Math.floor(pack.purchaseLimit.minutes * 0.9))
       }
+
+      if (upgrade.type === 'autoBuy') {
+        const pack = this.availablePacks.find(p => p.id === upgrade.packId)
+        if (pack) {
+          pack.hasAutoBuyer = true
+        }
+        return
+      }
     },
 
     hasAllItemsOfRarity(rarity: string): boolean {
       const allItemsOfRarity = Array.from(itemManager.getAllItems().values()).filter(item => item.rarity === rarity)
 
       return allItemsOfRarity.every(item => this.discoveredItems.has(item.id))
+    },
+
+    toggleAutoBuy(packId: string) {
+      const pack = this.availablePacks.find(p => p.id === packId)
+      if (!pack || !pack.hasAutoBuyer) return
+      pack.autoBuyEnabled = !pack.autoBuyEnabled
+    },
+
+    tryAutoBuyPacks() {
+      for (const pack of this.availablePacks) {
+        if (pack.hasAutoBuyer && pack.autoBuyEnabled) {
+          const maxBuyable = this.getMaxBuyable(pack.id)
+          if (maxBuyable > 0) {
+            this.buyPack(pack.id, maxBuyable)
+          }
+        }
+      }
     },
   },
 
