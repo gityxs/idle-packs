@@ -835,9 +835,15 @@ export const useStore = defineStore('main', {
     getSaveData(): SaveData {
       return {
         coins: this.coins.toString(),
-        inventory: this.inventory,
+        inventory: this.inventory.map(item => ({
+          ...item,
+          value: item.value.toString(),
+        })),
+        equippedItems: this.equippedItems.map(item => ({
+          ...item,
+          value: item.value.toString(),
+        })),
         ownedPacks: this.ownedPacks,
-        equippedItems: this.equippedItems,
         maxEquippedItems: this.maxEquippedItems,
         maxPackStorage: this.maxPackStorage,
         upgrades: this.upgrades,
@@ -866,13 +872,13 @@ export const useStore = defineStore('main', {
         }
 
         // Load inventory with BigNumber conversion
-        this.inventory = (saveData.inventory ?? []).map((item: any) => ({
+        this.inventory = (saveData.inventory ?? []).map(item => ({
           ...item,
           value: new BigNumber(item.value),
         }))
 
         // Load equipped items with BigNumber conversion
-        this.equippedItems = (saveData.equippedItems ?? []).map((item: any) => ({
+        this.equippedItems = (saveData.equippedItems ?? []).map(item => ({
           ...item,
           value: new BigNumber(item.value),
         }))
