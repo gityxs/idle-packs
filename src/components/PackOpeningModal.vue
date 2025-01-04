@@ -56,6 +56,11 @@
                         </span>
                     </div>
                 </div>
+
+                <!-- Add animation note -->
+                <div v-if="props.showAnimations" class="text-xs text-gray-500 mt-2">
+                    Tip: You can disable animations in settings for faster pack openings
+                </div>
             </div>
 
             <!-- Scrollable Content -->
