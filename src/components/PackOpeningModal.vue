@@ -55,16 +55,17 @@
             </div>
 
             <!-- Scrollable Content -->
-            <div class="p-4">
+            <div class="">
                 <!-- Revealed items -->
-                <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-                    <div v-for="item in stackedItems" :key="item.id"
-                        class="border p-3 rounded-lg flex items-center justify-between animate-fade-in" :class="{
+                <div class="space-y-3 max-h-[60vh] overflow-y-auto p-4">
+                    <div v-for="(item, index) in stackedItems" :key="item.id"
+                        class="border rounded-lg p-4 mb-4 animate-fade-in" :class="{
                             'border-gray-300': item.rarity === 'common',
                             'border-green-400': item.rarity === 'uncommon',
                             'border-blue-400': item.rarity === 'rare',
                             'border-purple-400': item.rarity === 'epic',
-                            'border-yellow-400 animate-pulse': item.rarity === 'legendary',
+                            'border-yellow-400': item.rarity === 'legendary',
+                            'shadow-glow': index === stackedItems.length - 1 && props.showAnimations,
                         }">
                         <div>
                             <h3 class="font-bold">{{ item.name }}</h3>

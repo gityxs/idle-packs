@@ -64,6 +64,7 @@ interface SaveData {
   availablePacks: Pack[]
   settings: { showAnimations: boolean }
   hasPerformedFirstAction: boolean
+  lastBackupReminder: number
 }
 
 export const useStore = defineStore('main', {
@@ -433,6 +434,8 @@ export const useStore = defineStore('main', {
     totalCoinsEarned: new BigNumber(0),
 
     hasPerformedFirstAction: false,
+
+    lastBackupReminder: 0, // timestamp of last backup reminder
   }),
 
   actions: {
@@ -825,6 +828,7 @@ export const useStore = defineStore('main', {
         availablePacks: this.availablePacks,
         settings: { showAnimations: this.settings.showAnimations },
         hasPerformedFirstAction: this.hasPerformedFirstAction,
+        lastBackupReminder: this.lastBackupReminder,
       }
     },
 
@@ -903,6 +907,9 @@ export const useStore = defineStore('main', {
 
         this.hasPerformedFirstAction = saveData.hasPerformedFirstAction ?? false
 
+        this.lastBackupReminder = saveData.lastBackupReminder ?? 0
+        this.checkBackupReminder()
+
         console.log('Save data loaded successfully')
       } catch (error) {
         console.error('Failed to load save data:', error)
@@ -978,6 +985,9 @@ export const useStore = defineStore('main', {
           }
         }
       })
+
+      // Check for backup reminder
+      this.checkBackupReminder()
 
       // Update last update time
       this.lastUpdate = now
@@ -1057,6 +1067,40 @@ export const useStore = defineStore('main', {
       itemCounts.forEach((count, itemId) => {
         collectionManager.updateCollection(itemId, count)
       })
+    },
+
+    checkBackupReminder() {
+      const TWELVE_HOURS = 12 * 60 * 60 * 1000
+      const now = Date.now()
+
+      if (now - this.lastBackupReminder >= TWELVE_HOURS) {
+        this.lastBackupReminder = now
+        this.saveToLocalStorage()
+
+        // Show backup reminder
+        const reminder = document.createElement('div')
+        reminder.className =
+          'fixed top-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded z-50'
+        reminder.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <p class="font-bold">Backup Reminder</p>
+              <p class="text-sm">Please download a backup of your save file to prevent progress loss.</p>
+            </div>
+            <button class="ml-4 text-yellow-700 hover:text-yellow-900" onclick="this.parentElement.parentElement.remove()">
+              ×
+            </button>
+          </div>
+        `
+        document.body.appendChild(reminder)
+
+        // Auto-remove after 1 minute
+        setTimeout(() => {
+          if (reminder && reminder.parentElement) {
+            reminder.remove()
+          }
+        }, 60000)
+      }
     },
   },
 
