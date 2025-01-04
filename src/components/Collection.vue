@@ -34,7 +34,7 @@
                         </p>
                     </div>
                     <div class="text-right text-sm">
-                        Collected: {{ getCollectionCountFormatted(item.id) }}
+                        Collected: {{ getCollectionCountFormatted(item.id, getMaxRequirement(item.id)) }}
                     </div>
                 </div>
 
@@ -46,7 +46,8 @@
                     }">
                         <div class="flex justify-between items-center">
                             <span>{{ bonus.description }}</span>
-                            <span>{{ getCollectionCountFormatted(item.id) }}/{{ bonus.requirement }}</span>
+                            <span>{{ getCollectionCountFormatted(item.id, bonus.requirement) }}/{{ bonus.requirement
+                                }}</span>
                         </div>
                         <!-- Progress bar -->
                         <div class="mt-1 w-full bg-gray-200 rounded-full h-1">
@@ -91,9 +92,9 @@ const getCollectionCount = (itemId: string) => {
     return entry?.count ?? 0
 }
 
-const getCollectionCountFormatted = (itemId: string) => {
+const getCollectionCountFormatted = (itemId: string, maxCount?: number) => {
     const count = getCollectionCount(itemId)
-    return props.formatNumber(count)
+    return props.formatNumber(maxCount ? Math.min(count, maxCount) : count)
 }
 
 const getCollectionBonuses = (itemId: string) => {
@@ -107,4 +108,11 @@ const isCollectionBonusActive = (itemId: string, requirement: number) => {
 
 const coinBonus = computed(() => collectionManager.getTotalBonus('coinProduction'))
 const valueBonus = computed(() => collectionManager.getTotalBonus('itemValue'))
+
+const getMaxRequirement = (itemId: string) => {
+    const bonuses = getCollectionBonuses(itemId)
+    return bonuses.length > 0
+        ? Math.max(...bonuses.map(b => b.requirement))
+        : Infinity
+}
 </script>

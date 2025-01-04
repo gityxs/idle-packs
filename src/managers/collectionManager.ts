@@ -54,6 +54,72 @@ export class CollectionManager {
       { type: 'coinProduction', bonus: 0.5, requirement: 1, description: 'Rainbow power: +50% coin production' },
       { type: 'itemValue', bonus: 0.4, requirement: 2, description: 'Prismatic value: +40% item value' },
     ])
+
+    // Add new collection items with bonuses
+    this.registerItem('meeseeks-box', [
+      { type: 'coinProduction', bonus: 0.1, requirement: 5, description: 'Can do!: +10% coin production' },
+      { type: 'itemValue', bonus: 0.15, requirement: 10, description: 'Look at me!: +15% item value' },
+    ])
+
+    this.registerItem('crystallus', [
+      { type: 'itemValue', bonus: 0.2, requirement: 3, description: 'Crystal clarity: +20% item value' },
+      { type: 'coinProduction', bonus: 0.12, requirement: 6, description: 'Crystalline focus: +12% coin production' },
+    ])
+
+    this.registerItem('astragonia', [
+      { type: 'coinProduction', bonus: 0.3, requirement: 1, description: 'Cosmic power: +30% coin production' },
+      { type: 'itemValue', bonus: 0.35, requirement: 2, description: 'Stellar worth: +35% item value' },
+    ])
+
+    this.registerItem('mermaid-tear', [
+      { type: 'itemValue', bonus: 0.45, requirement: 1, description: "Ocean's blessing: +45% item value" },
+      { type: 'coinProduction', bonus: 0.4, requirement: 2, description: 'Tidal fortune: +40% coin production' },
+    ])
+
+    this.registerItem('atlantean-pearl', [
+      { type: 'coinProduction', bonus: 0.6, requirement: 1, description: 'Lost wisdom: +60% coin production' },
+      { type: 'itemValue', bonus: 0.5, requirement: 2, description: 'Ancient treasure: +50% item value' },
+    ])
+
+    this.registerItem('phoenix-feather', [
+      { type: 'coinProduction', bonus: 0.35, requirement: 2, description: 'Eternal flame: +35% coin production' },
+      { type: 'itemValue', bonus: 0.4, requirement: 3, description: 'Rebirth riches: +40% item value' },
+    ])
+
+    this.registerItem('basilisk-eye', [
+      { type: 'itemValue', bonus: 0.45, requirement: 2, description: 'Petrifying gaze: +45% item value' },
+      { type: 'coinProduction', bonus: 0.38, requirement: 3, description: 'Serpent wisdom: +38% coin production' },
+    ])
+
+    this.registerItem('sphinx-riddle-stone', [
+      { type: 'coinProduction', bonus: 0.42, requirement: 2, description: 'Ancient wisdom: +42% coin production' },
+      { type: 'itemValue', bonus: 0.48, requirement: 3, description: 'Riddle master: +48% item value' },
+    ])
+
+    this.registerItem('chimera-heart', [
+      { type: 'coinProduction', bonus: 0.55, requirement: 1, description: 'Triple essence: +55% coin production' },
+      { type: 'itemValue', bonus: 0.52, requirement: 2, description: 'Mythical fusion: +52% item value' },
+    ])
+
+    this.registerItem('djinn-lamp', [
+      { type: 'itemValue', bonus: 0.58, requirement: 1, description: 'Infinite wishes: +58% item value' },
+      { type: 'coinProduction', bonus: 0.54, requirement: 2, description: 'Magical fortune: +54% coin production' },
+    ])
+
+    this.registerItem('aztec-calendar', [
+      { type: 'coinProduction', bonus: 0.65, requirement: 1, description: 'Time mastery: +65% coin production' },
+      { type: 'itemValue', bonus: 0.6, requirement: 2, description: 'Golden age: +60% item value' },
+    ])
+
+    this.registerItem('nefertiti-crown', [
+      { type: 'itemValue', bonus: 0.7, requirement: 1, description: 'Royal treasury: +70% item value' },
+      { type: 'coinProduction', bonus: 0.62, requirement: 2, description: 'Divine rule: +62% coin production' },
+    ])
+
+    this.registerItem('olmec-shard', [
+      { type: 'coinProduction', bonus: 0.58, requirement: 1, description: 'Ancient power: +58% coin production' },
+      { type: 'itemValue', bonus: 0.55, requirement: 2, description: 'Lost civilization: +55% item value' },
+    ])
   }
 
   getCollectionData() {
