@@ -1,5 +1,6 @@
 <template>
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        @click.self="$emit('close')">
         <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <!-- Header -->
             <div class="p-4 border-b flex justify-between items-center">
@@ -68,12 +69,13 @@ import { itemManager } from '../managers/itemManager'
 import { formatNumber } from '../utils/format'
 import BigNumber from 'bignumber.js'
 import type { Pack } from '../store'
+import { onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps<{
     pack: Pack
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
     (e: 'close'): void
 }>()
 
@@ -98,4 +100,18 @@ const getItemProduction = (itemId: string) => {
 const getItemValue = (itemId: string) => {
     return itemManager.getItem(itemId)?.value ?? 0
 }
+
+const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+        emit('close')
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('keydown', handleEscape)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleEscape)
+})
 </script>

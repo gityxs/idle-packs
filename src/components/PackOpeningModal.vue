@@ -1,7 +1,7 @@
 <template>
     <div v-if="show" class="fixed inset-0 flex items-start justify-center z-50">
         <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div class="absolute inset-0 bg-black bg-opacity-50" @click="close"></div>
 
         <!-- Modal -->
         <div class="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 mt-4"
@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import type { Item } from '../types'
 import BigNumber from 'bignumber.js'
 
@@ -125,12 +125,12 @@ const remainingItems = computed(() => props.items.length - revealedItems.value.l
 
 // Compute stacked items (combine duplicates)
 const stackedItems = computed(() => {
-    const itemMap = new Map<string, Item>()
+    const itemMap = new Map<string, Item & { amount?: number }>()
 
     revealedItems.value.forEach(item => {
         const existing = itemMap.get(item.id)
         if (existing) {
-            existing.amount += 1
+            existing.amount = (existing.amount || 1) + 1
         } else {
             itemMap.set(item.id, { ...item, amount: 1 })
         }
@@ -186,6 +186,13 @@ onMounted(() => {
             revealAll()
         }, 50)
     }
+
+    // Add event listener for escape key
+    window.addEventListener('keydown', handleEscape)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleEscape)
 })
 
 const close = () => {
@@ -242,6 +249,20 @@ const startShakeAnimation = () => {
 const skipAnimation = () => {
     isAnimating.value = false
     revealedItems.value = [...props.items]
+}
+
+// Add escape key handler
+const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+        if (remainingItems.value > 0) {
+            // If there are remaining items, reveal all first
+            skipAnimation()
+            revealedItems.value = [...props.items]
+        } else {
+            // Only close if all items are revealed
+            close()
+        }
+    }
 }
 </script>
 

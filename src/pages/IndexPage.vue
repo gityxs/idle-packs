@@ -89,10 +89,13 @@
             </div>
           </div>
           <div class="grid gap-4">
-            <div v-for="pack in store.availablePacks" :key="pack.id"
-              class="border p-4 rounded-lg min-w-[200px] cursor-pointer hover:bg-gray-50"
-              @click.prevent="selectedPack = pack">
-              <h3 class="font-bold">{{ pack.name }}</h3>
+            <div v-for="pack in store.availablePacks" :key="pack.id" class="border p-4 rounded-lg min-w-[200px]">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold">{{ pack.name }}</h3>
+                <button @click="selectedPack = pack" class="text-blue-500 hover:text-blue-600 text-sm underline">
+                  Details
+                </button>
+              </div>
               <p>Price: {{ formatNumber(pack.price) }} coins</p>
               <p>Items: {{ pack.minItems }}-{{ pack.maxItems }}</p>
 
