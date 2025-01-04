@@ -1,6 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import BigNumber from 'bignumber.js'
 import { itemManager, type ItemDefinition, type ItemDrop } from './managers/itemManager'
+import { achievementManager } from './managers/achievementManager'
 
 interface Item {
   id: string
@@ -8,6 +9,7 @@ interface Item {
   value: BigNumber
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
   amount: number
+  locked?: boolean
 }
 
 interface PackPurchaseLimit {
@@ -248,6 +250,10 @@ export const useStore = defineStore('main', {
     discoveredItems: new Set<string>(),
 
     autoSaveInterval: 60000, // Save every minute
+
+    totalPacksOpened: 0,
+    totalDailyPacksOpened: 0,
+    totalCoinsEarned: new BigNumber(0),
   }),
 
   actions: {
@@ -367,6 +373,14 @@ export const useStore = defineStore('main', {
         this.ownedPacks.splice(index, 1)
       }
 
+      // Track achievements
+      this.totalPacksOpened += amount
+      if (packId === 'daily-pack') {
+        this.totalDailyPacksOpened += amount
+      }
+
+      this.updateAchievements()
+
       return allItems
     },
 
@@ -398,6 +412,8 @@ export const useStore = defineStore('main', {
 
       // Calculate total value
       const totalValue = item.value.times(amount)
+      const multiplier = achievementManager.getTotalBonus('coinProduction')
+      const totalValueWithMultiplier = totalValue.times(new BigNumber(1).plus(multiplier))
 
       // Update inventory
       item.amount -= amount
@@ -407,7 +423,8 @@ export const useStore = defineStore('main', {
       }
 
       // Add coins
-      this.coins = this.coins.plus(totalValue)
+      this.coins = this.coins.plus(totalValueWithMultiplier)
+      this.totalCoinsEarned = this.totalCoinsEarned.plus(totalValueWithMultiplier)
       return true
     },
 
@@ -423,18 +440,20 @@ export const useStore = defineStore('main', {
     },
 
     sellAllItems() {
-      // Calculate total value of all items
-      const totalValue = this.inventory.reduce((sum, item) => {
-        return sum.plus(item.value.times(item.amount))
+      const unlockedItems = this.inventory.filter(item => !item.locked)
+      const totalValue = unlockedItems.reduce((total, item) => {
+        return total.plus(item.value.times(item.amount))
       }, new BigNumber(0))
 
-      // Add coins
-      this.coins = this.coins.plus(totalValue)
+      // Apply achievement bonus
+      const multiplier = achievementManager.getTotalBonus('itemValue')
+      const totalValueWithMultiplier = totalValue.times(new BigNumber(1).plus(multiplier))
 
-      // Clear inventory
-      this.inventory = []
-
-      return totalValue
+      if (totalValueWithMultiplier.isGreaterThan(0)) {
+        this.coins = this.coins.plus(totalValueWithMultiplier)
+        this.totalCoinsEarned = this.totalCoinsEarned.plus(totalValueWithMultiplier)
+        this.inventory = this.inventory.filter(item => item.locked)
+      }
     },
 
     equipItem(itemId: string) {
@@ -776,6 +795,29 @@ export const useStore = defineStore('main', {
           return 0
       }
     },
+
+    updateAchievements() {
+      // Track pack openings
+      achievementManager.updateProgress('pack-opener-1', this.totalPacksOpened)
+      achievementManager.updateProgress('pack-opener-2', this.totalPacksOpened)
+
+      // Track daily packs
+      achievementManager.updateProgress('daily-collector-1', this.totalDailyPacksOpened)
+
+      // Track unique items
+      achievementManager.updateProgress('collector-1', this.discoveredItems.size)
+      achievementManager.updateProgress('collector-2', this.discoveredItems.size)
+
+      // Track total coins
+      achievementManager.updateProgress('wealthy-1', this.totalCoinsEarned.toNumber())
+    },
+
+    toggleItemLock(itemId: string) {
+      const item = this.inventory.find(i => i.id === itemId)
+      if (item) {
+        item.locked = !item.locked
+      }
+    },
   },
 
   getters: {
@@ -794,6 +836,10 @@ export const useStore = defineStore('main', {
         if (!definition) return total
 
         let production = new BigNumber(definition.coinsPerMinute)
+
+        let multiplier = achievementManager.getTotalBonus('coinProduction')
+        console.log('multiplier', multiplier)
+        production = production.times(new BigNumber(1).plus(multiplier))
 
         // Apply synergy effects
         if (definition.synergyEffect && definition.synergyEffect.type === 'coinGen') {

@@ -16,7 +16,10 @@
         <div class="flex gap-3">
           <button v-if="store.inventory.length > 0" @click="sellAllItems"
             class="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center gap-2">
-            <span>Sell All ({{ formatNumber(totalInventoryValue) }})</span>
+            <span>
+              Sell All{{ lockedItemsCount ? ` (${unlockedItemsCount}/${store.inventory.length})` : '' }}
+              ({{ formatNumber(totalInventoryValue) }})
+            </span>
           </button>
 
           <label class="flex items-center gap-2 cursor-pointer">
@@ -60,6 +63,13 @@
               : 'text-gray-500 hover:text-gray-700'
           ]">
             Collection
+          </button>
+          <button @click="activeTab = 'achievements'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+            activeTab === 'achievements'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+            Achievements
           </button>
         </nav>
       </div>
@@ -252,6 +262,15 @@
 
             <!-- Add synergy info -->
             <SynergyInfo v-if="itemManager.getItem(item.id)" :item="itemManager.getItem(item.id)!" />
+
+            <!-- Add lock checkbox -->
+            <div class="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" :checked="item.locked" @change="store.toggleItemLock(item.id)"
+                  class="w-4 h-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500">
+                <span class="text-sm text-gray-600">Lock Item</span>
+              </label>
+            </div>
           </div>
           <div v-if="!store.inventory.length" class="text-gray-500 text-center p-4 border rounded-lg">
             No items in inventory
@@ -267,6 +286,11 @@
       <!-- Add new tab content -->
       <div v-else-if="activeTab === 'collection'">
         <Collection />
+      </div>
+
+      <!-- Add tab content -->
+      <div v-else-if="activeTab === 'achievements'">
+        <Achievements />
       </div>
     </div>
 
@@ -294,6 +318,7 @@ import PackDetailsModal from '../components/PackDetailsModal.vue'
 import SaveLoadMenu from '../components/SaveLoadMenu.vue'
 import SynergyInfo from '../components/SynergyInfo.vue'
 import TypeChip from '../components/TypeChip.vue'
+import Achievements from '../components/Achievements.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')
@@ -403,9 +428,11 @@ const finishOpening = () => {
 
 // Add computed for total inventory value
 const totalInventoryValue = computed(() => {
-  return store.inventory.reduce((total, item) => {
-    return total.plus(item.value.times(item.amount))
-  }, new BigNumber(0))
+  return store.inventory
+    .filter(item => !item.locked)
+    .reduce((total, item) => {
+      return total.plus(item.value.times(item.amount))
+    }, new BigNumber(0))
 })
 
 // Add sell all function
@@ -498,4 +525,7 @@ const sortedInventory = computed(() => {
 
 // Add state for selected pack
 const selectedPack = ref(null)
+
+const lockedItemsCount = computed(() => store.inventory.filter(i => i.locked).length)
+const unlockedItemsCount = computed(() => store.inventory.length - lockedItemsCount.value)
 </script>
