@@ -63,6 +63,7 @@ interface SaveData {
   lastUpdate: number
   availablePacks: Pack[]
   settings: { showAnimations: boolean }
+  hasPerformedFirstAction: boolean
 }
 
 export const useStore = defineStore('main', {
@@ -275,6 +276,8 @@ export const useStore = defineStore('main', {
     totalPacksOpened: 0,
     totalDailyPacksOpened: 0,
     totalCoinsEarned: new BigNumber(0),
+
+    hasPerformedFirstAction: false,
   }),
 
   actions: {
@@ -447,6 +450,9 @@ export const useStore = defineStore('main', {
 
       this.coins = this.coins.plus(finalValue)
       this.totalCoinsEarned = this.totalCoinsEarned.plus(finalValue)
+
+      this.hasPerformedFirstAction = true
+
       return true
     },
 
@@ -480,9 +486,13 @@ export const useStore = defineStore('main', {
         this.totalCoinsEarned = this.totalCoinsEarned.plus(totalValueWithMultiplier)
         this.inventory = this.inventory.filter(item => item.locked)
       }
+
+      if (this.inventory.length > 0) {
+        this.hasPerformedFirstAction = true
+      }
     },
 
-    equipItem(itemId: string) {
+    equipItem(itemId: string): boolean {
       const item = this.inventory.find(i => i.id === itemId)
       if (!item || item.amount < 1) return false
 
@@ -498,6 +508,9 @@ export const useStore = defineStore('main', {
 
       // Add to equipped items
       this.equippedItems.push({ ...item, amount: 1 })
+
+      this.hasPerformedFirstAction = true
+
       return true
     },
 
@@ -644,6 +657,7 @@ export const useStore = defineStore('main', {
         lastUpdate: this.lastUpdate,
         availablePacks: this.availablePacks,
         settings: { showAnimations: this.settings.showAnimations },
+        hasPerformedFirstAction: this.hasPerformedFirstAction,
       }
     },
 
@@ -719,6 +733,8 @@ export const useStore = defineStore('main', {
 
         // Load last update time
         this.lastUpdate = saveData.lastUpdate ?? Date.now()
+
+        this.hasPerformedFirstAction = saveData.hasPerformedFirstAction ?? false
 
         console.log('Save data loaded successfully')
       } catch (error) {

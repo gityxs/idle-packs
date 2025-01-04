@@ -4,7 +4,8 @@
         <div class="absolute inset-0 bg-black bg-opacity-50"></div>
 
         <!-- Modal -->
-        <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 mt-8">
+        <div class="relative bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            :class="{ 'animate-shake': props.showAnimations && isShaking }">
             <!-- Fixed Header -->
             <div class="sticky top-0 bg-white rounded-t-lg border-b p-4 z-10">
                 <div class="flex justify-between items-center mb-4">
@@ -135,6 +136,7 @@ const stackedItems = computed(() => {
 
 const revealNext = () => {
     if (remainingItems.value > 0) {
+        startShakeAnimation()
         const nextItem = props.items[revealedItems.value.length]
         revealedItems.value.push(nextItem)
     }
@@ -149,7 +151,7 @@ const revealAll = () => {
         const reveal = () => {
             if (remainingItems.value > 0) {
                 revealNext()
-                setTimeout(reveal, 200) // Adjust timing as needed
+                setTimeout(reveal, 700) // Increased delay to account for shake animation
             }
         }
         reveal()
@@ -205,6 +207,17 @@ const profit = computed(() => {
 const isProfit = computed(() => {
     return profit.value.isGreaterThanOrEqualTo(0)
 })
+
+const isShaking = ref(false)
+
+// Add shake animation when opening packs
+const startShakeAnimation = () => {
+    if (!props.showAnimations) return
+    isShaking.value = true
+    setTimeout(() => {
+        isShaking.value = false
+    }, 500) // Animation duration
+}
 </script>
 
 <style scoped>
@@ -242,5 +255,25 @@ const isProfit = computed(() => {
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background-color: #CBD5E0;
     border-radius: 3px;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(-5deg);
+    }
+
+    75% {
+        transform: rotate(5deg);
+    }
+}
+
+.animate-shake {
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
 }
 </style>
