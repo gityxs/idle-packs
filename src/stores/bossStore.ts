@@ -163,16 +163,32 @@ export const useBossStore = defineStore('boss', {
 
     distributeExperience(experience: number) {
       const store = useStore()
-      const itemsWithCombatStats = store.equippedItems.filter(
-        item => (item as ItemWithCombatStats).combatStats
-      ) as ItemWithCombatStats[]
 
-      if (itemsWithCombatStats.length === 0) return
+      // Get unique combat items by ID
+      const uniqueCombatItems = store.equippedItems.reduce((acc, item) => {
+        if ((item as ItemWithCombatStats).combatStats) {
+          // Only keep the first instance of each item
+          if (!acc.some(existingItem => existingItem.id === item.id)) {
+            acc.push(item as ItemWithCombatStats)
+          }
+        }
+        return acc
+      }, [] as ItemWithCombatStats[])
 
-      const experiencePerItem = Math.floor(experience / itemsWithCombatStats.length)
+      if (uniqueCombatItems.length === 0) return
 
-      itemsWithCombatStats.forEach(item => {
-        this.addExperienceToItem(item, experiencePerItem)
+      const experiencePerItem = Math.floor(experience / uniqueCombatItems.length)
+
+      uniqueCombatItems.forEach(item => {
+        // Find all instances of this item in equipped items
+        const allInstances = store.equippedItems.filter(
+          equippedItem => equippedItem.id === item.id
+        ) as ItemWithCombatStats[]
+
+        // Update experience and stats for all instances
+        allInstances.forEach(instance => {
+          this.addExperienceToItem(instance, experiencePerItem)
+        })
       })
     },
 
