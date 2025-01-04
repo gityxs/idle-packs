@@ -2,6 +2,7 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import BigNumber from 'bignumber.js'
 import { itemManager, type ItemDefinition, type ItemDrop } from './managers/itemManager'
 import { achievementManager } from './managers/achievementManager'
+import { collectionManager } from './managers/collectionManager'
 
 interface Item {
   id: string
@@ -46,6 +47,22 @@ interface Upgrade {
   maxLevel?: number
   type: 'packLimit' | 'packTimer' | 'storage' | 'equipmentSlot' | 'autoBuy'
   packId: string
+  increaseAmount?: number
+}
+
+interface SaveData {
+  coins: string
+  inventory: Item[]
+  ownedPacks: OwnedPack[]
+  equippedItems: Item[]
+  maxEquippedItems: number
+  maxPackStorage: number
+  upgrades: Upgrade[]
+  discoveredItems: string[]
+  collection: CollectionEntry[]
+  lastUpdate: number
+  availablePacks: Pack[]
+  settings: { showAnimations: boolean }
 }
 
 export const useStore = defineStore('main', {
@@ -169,6 +186,7 @@ export const useStore = defineStore('main', {
         level: 0,
         type: 'storage',
         packId: '',
+        increaseAmount: 5,
       },
       {
         id: 'equipment-slot',
@@ -177,9 +195,10 @@ export const useStore = defineStore('main', {
         basePrice: 5000,
         priceMultiplier: 3,
         level: 0,
-        maxLevel: 4,
+        maxLevel: 5,
         type: 'equipmentSlot',
         packId: '',
+        increaseAmount: 1,
       },
       {
         id: 'morty-pack-limit',
@@ -190,6 +209,7 @@ export const useStore = defineStore('main', {
         level: 0,
         type: 'packLimit',
         packId: 'morty-pack',
+        increaseAmount: 2,
       },
       {
         id: 'morty-pack-timer',
@@ -201,6 +221,7 @@ export const useStore = defineStore('main', {
         maxLevel: 5,
         type: 'packTimer',
         packId: 'morty-pack',
+        increaseAmount: 0.1,
       },
       {
         id: 'morty-pack-auto',
@@ -406,25 +427,26 @@ export const useStore = defineStore('main', {
       }
     },
 
-    sellItem(itemId: string, amount = 1) {
+    sellItem(itemId: string, amount = 1): boolean {
       const item = this.inventory.find(i => i.id === itemId)
       if (!item || item.amount < amount) return false
 
-      // Calculate total value
+      // Calculate total value with bonuses
       const totalValue = item.value.times(amount)
-      const multiplier = achievementManager.getTotalBonus('coinProduction')
-      const totalValueWithMultiplier = totalValue.times(new BigNumber(1).plus(multiplier))
+      const collectionBonus = collectionManager.getTotalBonus('itemValue')
+      const achievementBonus = achievementManager.getTotalBonus('itemValue')
+      const totalBonus = collectionBonus + achievementBonus
+      const finalValue = totalValue.times(new BigNumber(1).plus(totalBonus))
 
-      // Update inventory
+      // Update inventory and add coins
       item.amount -= amount
       if (item.amount <= 0) {
         const index = this.inventory.indexOf(item)
         this.inventory.splice(index, 1)
       }
 
-      // Add coins
-      this.coins = this.coins.plus(totalValueWithMultiplier)
-      this.totalCoinsEarned = this.totalCoinsEarned.plus(totalValueWithMultiplier)
+      this.coins = this.coins.plus(finalValue)
+      this.totalCoinsEarned = this.totalCoinsEarned.plus(finalValue)
       return true
     },
 
@@ -432,6 +454,10 @@ export const useStore = defineStore('main', {
       items.forEach(item => {
         this.discoveredItems.add(item.id)
         this.addItemToInventory(item)
+
+        // Update collection
+        const totalCollected = this.inventory.filter(i => i.id === item.id).reduce((sum, i) => sum + i.amount, 0)
+        collectionManager.updateCollection(item.id, totalCollected)
       })
     },
 
@@ -544,33 +570,40 @@ export const useStore = defineStore('main', {
     },
 
     applyUpgradeEffects(upgrade: Upgrade) {
-      if (upgrade.type === 'storage') {
-        this.maxPackStorage += 5
-        return
-      }
+      switch (upgrade.type) {
+        case 'storage':
+          this.maxPackStorage += upgrade.increaseAmount || 0
+          break
 
-      if (upgrade.type === 'equipmentSlot') {
-        this.maxEquippedItems++
-        return
-      }
+        case 'equipmentSlot':
+          this.maxEquippedItems += upgrade.increaseAmount || 0
+          break
 
-      const pack = this.availablePacks.find(p => p.id === upgrade.packId)
-      if (!pack?.purchaseLimit) return
-
-      if (upgrade.type === 'packLimit') {
-        const increaseAmount = upgrade.packId === 'morty-pack' ? 2 : 1
-        pack.purchaseLimit.amount += increaseAmount
-        pack.purchaseLimit.remainingPurchases = pack.purchaseLimit.amount
-      } else if (upgrade.type === 'packTimer') {
-        pack.purchaseLimit.minutes = Math.max(1, Math.floor(pack.purchaseLimit.minutes * 0.9))
-      }
-
-      if (upgrade.type === 'autoBuy') {
-        const pack = this.availablePacks.find(p => p.id === upgrade.packId)
-        if (pack) {
-          pack.hasAutoBuyer = true
+        case 'packLimit': {
+          const pack = this.availablePacks.find(p => p.id === upgrade.packId)
+          if (pack?.purchaseLimit) {
+            pack.purchaseLimit.amount += upgrade.increaseAmount || 0
+            pack.purchaseLimit.remainingPurchases += upgrade.increaseAmount || 0
+          }
+          break
         }
-        return
+
+        case 'packTimer': {
+          const pack = this.availablePacks.find(p => p.id === upgrade.packId)
+          if (pack?.purchaseLimit) {
+            const reduction = upgrade.increaseAmount || 0
+            pack.purchaseLimit.minutes *= 1 - reduction
+          }
+          break
+        }
+
+        case 'autoBuy': {
+          const pack = this.availablePacks.find(p => p.id === upgrade.packId)
+          if (pack) {
+            pack.hasAutoBuyer = true
+          }
+          break
+        }
       }
     },
 
@@ -597,55 +630,52 @@ export const useStore = defineStore('main', {
       }
     },
 
-    getSaveData() {
+    getSaveData(): SaveData {
       return {
         coins: this.coins.toString(),
-        inventory: this.inventory.map(item => ({
-          ...item,
-          value: item.value.toString(),
-        })),
+        inventory: this.inventory,
         ownedPacks: this.ownedPacks,
-        availablePacks: this.availablePacks,
-        settings: this.settings,
-        equippedItems: this.equippedItems.map(item => ({
-          ...item,
-          value: item.value.toString(),
-        })),
+        equippedItems: this.equippedItems,
         maxEquippedItems: this.maxEquippedItems,
         maxPackStorage: this.maxPackStorage,
         upgrades: this.upgrades,
         discoveredItems: Array.from(this.discoveredItems),
+        collection: collectionManager.getCollectionData(),
         lastUpdate: this.lastUpdate,
+        availablePacks: this.availablePacks,
+        settings: { showAnimations: this.settings.showAnimations },
       }
     },
 
-    loadSaveData(saveData: any) {
+    loadSaveData(saveData: SaveData) {
       try {
-        // Load basic values
+        // Load basic values with defaults
         this.coins = new BigNumber(saveData.coins)
-        this.maxEquippedItems = saveData.maxEquippedItems
-        this.maxPackStorage = saveData.maxPackStorage
-        this.settings = saveData.settings
+        this.maxEquippedItems = saveData.maxEquippedItems ?? 4
+        this.maxPackStorage = saveData.maxPackStorage ?? 5
+        this.settings = {
+          showAnimations: saveData.settings?.showAnimations ?? true,
+        }
 
         // Load inventory with BigNumber conversion
-        this.inventory = saveData.inventory.map((item: any) => ({
+        this.inventory = (saveData.inventory ?? []).map((item: any) => ({
           ...item,
           value: new BigNumber(item.value),
         }))
 
         // Load equipped items with BigNumber conversion
-        this.equippedItems = saveData.equippedItems.map((item: any) => ({
+        this.equippedItems = (saveData.equippedItems ?? []).map((item: any) => ({
           ...item,
           value: new BigNumber(item.value),
         }))
 
         // Load owned packs
-        this.ownedPacks = saveData.ownedPacks
+        this.ownedPacks = saveData.ownedPacks ?? []
 
         // Merge available packs with new content
         const defaultState = useStore().$state
         this.availablePacks = defaultState.availablePacks.map(defaultPack => {
-          const savedPack = saveData.availablePacks.find((p: Pack) => p.id === defaultPack.id)
+          const savedPack = saveData.availablePacks?.find((p: Pack) => p.id === defaultPack.id)
           if (savedPack) {
             // Preserve saved state but ensure all properties exist
             return {
@@ -658,6 +688,9 @@ export const useStore = defineStore('main', {
                     ...savedPack.purchaseLimit,
                   }
                 : defaultPack.purchaseLimit,
+              // Ensure auto buyer properties exist
+              hasAutoBuyer: savedPack.hasAutoBuyer ?? defaultPack.hasAutoBuyer ?? false,
+              autoBuyEnabled: savedPack.autoBuyEnabled ?? defaultPack.autoBuyEnabled ?? false,
             }
           }
           return defaultPack // Use default for new packs
@@ -665,7 +698,7 @@ export const useStore = defineStore('main', {
 
         // Merge upgrades with new content
         this.upgrades = defaultState.upgrades.map(defaultUpgrade => {
-          const savedUpgrade = saveData.upgrades.find((u: Upgrade) => u.id === defaultUpgrade.id)
+          const savedUpgrade = saveData.upgrades?.find((u: Upgrade) => u.id === defaultUpgrade.id)
           if (savedUpgrade) {
             // Preserve saved state but ensure all properties exist
             return {
@@ -677,10 +710,15 @@ export const useStore = defineStore('main', {
         })
 
         // Load discovered items
-        this.discoveredItems = new Set(saveData.discoveredItems)
+        this.discoveredItems = new Set(saveData.discoveredItems ?? [])
+
+        // Load collection
+        if (saveData.collection) {
+          collectionManager.loadSaveData(saveData.collection)
+        }
 
         // Load last update time
-        this.lastUpdate = saveData.lastUpdate || Date.now()
+        this.lastUpdate = saveData.lastUpdate ?? Date.now()
 
         console.log('Save data loaded successfully')
       } catch (error) {
@@ -818,6 +856,25 @@ export const useStore = defineStore('main', {
         item.locked = !item.locked
       }
     },
+
+    updateCollectionFromInventory() {
+      // Clear existing collection data
+      collectionManager.resetCollection()
+
+      // Update collection based on current inventory
+      const itemCounts = new Map<string, number>()
+
+      // Count items in inventory
+      this.inventory.forEach(item => {
+        const currentCount = itemCounts.get(item.id) || 0
+        itemCounts.set(item.id, currentCount + item.amount)
+      })
+
+      // Update collection with counts
+      itemCounts.forEach((count, itemId) => {
+        collectionManager.updateCollection(itemId, count)
+      })
+    },
   },
 
   getters: {
@@ -831,6 +888,18 @@ export const useStore = defineStore('main', {
     formattedCoins: state => formatNumber(state.coins),
 
     totalProduction(): BigNumber {
+      let production = this.baseProduction
+      const achievementBonus = achievementManager.getTotalBonus('coinProduction')
+      const collectionBonus = collectionManager.getTotalBonus('coinProduction')
+      const totalBonus = achievementBonus + collectionBonus
+      return production.times(1 + totalBonus)
+    },
+
+    formattedProduction(): string {
+      return `${formatNumber(this.totalProduction)}/min`
+    },
+
+    baseProduction(): BigNumber {
       return this.equippedItems.reduce((total, item) => {
         const definition = itemManager.getItem(item.id)
         if (!definition) return total
@@ -838,7 +907,6 @@ export const useStore = defineStore('main', {
         let production = new BigNumber(definition.coinsPerMinute)
 
         let multiplier = achievementManager.getTotalBonus('coinProduction')
-        console.log('multiplier', multiplier)
         production = production.times(new BigNumber(1).plus(multiplier))
 
         // Apply synergy effects
@@ -849,10 +917,6 @@ export const useStore = defineStore('main', {
 
         return total.plus(production)
       }, new BigNumber(0))
-    },
-
-    formattedProduction(): string {
-      return `${formatNumber(this.totalProduction)}/min`
     },
 
     getPackTimeRemaining: state => (packId: string) => {

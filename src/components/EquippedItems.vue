@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Equipment</h2>
             <div class="text-lg text-green-600">
-                +{{ store.formattedProduction }}
+                +{{ production }}
             </div>
         </div>
 
@@ -66,10 +66,7 @@ import SynergyInfo from '../components/SynergyInfo.vue'
 import TypeChip from '../components/TypeChip.vue'
 
 const store = useStore()
-
-const getEquippedItem = (index: number) => {
-    return store.equippedItems[index]
-}
+const production = computed(() => store.formattedProduction)
 
 const getItemProduction = (itemId?: string) => {
     if (!itemId) return new BigNumber(0)

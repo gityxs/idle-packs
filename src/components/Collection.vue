@@ -1,53 +1,59 @@
 <template>
     <div class="space-y-6">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center">
             <h2 class="text-2xl font-bold">Collection</h2>
-            <div class="text-lg">
-                Progress: {{ discoveredCount }}/{{ totalItems }}
-                ({{ Math.round(discoveredCount / totalItems * 100) }}%)
+            <div class="text-sm text-gray-600">
+                Collection Bonuses:
+                <div class="flex gap-4">
+                    <span class="text-green-600">+{{ (coinBonus * 100).toFixed(0) }}% Coin Production</span>
+                    <span class="text-blue-600">+{{ (valueBonus * 100).toFixed(0) }}% Item Value</span>
+                </div>
             </div>
         </div>
 
-        <div class="space-y-8">
-            <!-- Group items by rarity -->
-            <div v-for="rarity in rarities" :key="rarity" class="space-y-4">
-                <h3 class="text-xl font-semibold capitalize" :class="{
-                    'text-gray-600': rarity === 'common',
-                    'text-green-600': rarity === 'uncommon',
-                    'text-blue-600': rarity === 'rare',
-                    'text-purple-600': rarity === 'epic',
-                    'text-yellow-600': rarity === 'legendary',
-                }">
-                    {{ rarity }}
-                </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="item in sortedItems" :key="item.id" class="border rounded-lg p-4" :class="{
+                'opacity-50': !isDiscovered(item.id),
+                'border-gray-300': item.rarity === 'common',
+                'border-green-400': item.rarity === 'uncommon',
+                'border-blue-400': item.rarity === 'rare',
+                'border-purple-400': item.rarity === 'epic',
+                'border-yellow-400': item.rarity === 'legendary',
+            }">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-bold">{{ isDiscovered(item.id) ? item.name : '???' }}</h3>
+                        <p class="text-sm capitalize" :class="{
+                            'text-gray-600': item.rarity === 'common',
+                            'text-green-600': item.rarity === 'uncommon',
+                            'text-blue-600': item.rarity === 'rare',
+                            'text-purple-600': item.rarity === 'epic',
+                            'text-yellow-600': item.rarity === 'legendary',
+                        }">
+                            {{ item.rarity }}
+                        </p>
+                    </div>
+                    <div class="text-right text-sm">
+                        Collected: {{ getCollectionCount(item.id) }}
+                    </div>
+                </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div v-for="item in getItemsByRarity(rarity)" :key="item.id" class="border p-4 rounded-lg" :class="{
-                        'opacity-40': !isDiscovered(item.id),
-                        'border-gray-300': rarity === 'common',
-                        'border-green-400': rarity === 'uncommon',
-                        'border-blue-400': rarity === 'rare',
-                        'border-purple-400': rarity === 'epic',
-                        'border-yellow-400': rarity === 'legendary',
+                <!-- Collection Bonuses -->
+                <div v-if="isDiscovered(item.id)" class="mt-4 space-y-2">
+                    <div v-for="(bonus, index) in getCollectionBonuses(item.id)" :key="index" class="text-sm" :class="{
+                        'text-green-600': isCollectionBonusActive(item.id, bonus.requirement),
+                        'text-gray-400': !isCollectionBonusActive(item.id, bonus.requirement)
                     }">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-bold">
-                                    {{ isDiscovered(item.id) ? item.name : '???' }}
-                                </h4>
-                                <p class="text-sm text-gray-600">
-                                    {{ isDiscovered(item.id) ? `+${formatNumber(new
-                                        BigNumber(item.coinsPerMinute))}/min` : 'Undiscovered' }}
-                                </p>
-                            </div>
-                            <div class="text-right text-sm">
-                                <p>Value: {{ isDiscovered(item.id) ? formatNumber(new BigNumber(item.value)) : '???' }}
-                                </p>
-                            </div>
+                        <div class="flex justify-between items-center">
+                            <span>{{ bonus.description }}</span>
+                            <span>{{ getCollectionCount(item.id) }}/{{ bonus.requirement }}</span>
                         </div>
-
-                        <div v-if="isDiscovered(item.id)" class="mt-2 text-sm text-gray-500">
-                            Found in: {{ getItemSource(item.id) }}
+                        <!-- Progress bar -->
+                        <div class="mt-1 w-full bg-gray-200 rounded-full h-1">
+                            <div class="h-1 rounded-full transition-all"
+                                :class="isCollectionBonusActive(item.id, bonus.requirement) ? 'bg-green-500' : 'bg-gray-400'"
+                                :style="{ width: `${Math.min(100, (getCollectionCount(item.id) / bonus.requirement) * 100)}%` }">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -58,35 +64,37 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useStore } from '../store'
 import { itemManager } from '../managers/itemManager'
-import { formatNumber } from '../utils/format'
-import BigNumber from 'bignumber.js'
+import { collectionManager } from '../managers/collectionManager'
+import { useStore } from '../store'
 
 const store = useStore()
 
-const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary']
+const sortedItems = computed(() => {
+    const items = Array.from(itemManager.getAllItems().values())
+    const rarityOrder = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 }
 
-// Get all items grouped by rarity
-const getItemsByRarity = (rarity: string) => {
-    return Array.from(itemManager.getAllItems().values())
-        .filter(item => item.rarity === rarity)
+    return items.sort((a, b) => {
+        return rarityOrder[b.rarity] - rarityOrder[a.rarity]
+    })
+})
+
+const isDiscovered = (itemId: string) => store.discoveredItems.has(itemId)
+
+const getCollectionCount = (itemId: string) => {
+    const entry = collectionManager.getCollectionEntry(itemId)
+    return entry?.count ?? 0
 }
 
-// Check if an item has been discovered
-const isDiscovered = (itemId: string) => {
-    return store.discoveredItems.has(itemId)
+const getCollectionBonuses = (itemId: string) => {
+    const entry = collectionManager.getCollectionEntry(itemId)
+    return entry?.bonuses ?? []
 }
 
-// Get the source pack for an item
-const getItemSource = (itemId: string) => {
-    const pack = store.availablePacks.find(p =>
-        p.possibleItems.some(i => i.itemId === itemId)
-    )
-    return pack ? pack.name : 'Unknown'
+const isCollectionBonusActive = (itemId: string, requirement: number) => {
+    return getCollectionCount(itemId) >= requirement
 }
 
-// Compute total and discovered counts
-const totalItems = computed(() => itemManager.getAllItems().size)
-const discoveredCount = computed(() => store.discoveredItems.size)
+const coinBonus = computed(() => collectionManager.getTotalBonus('coinProduction'))
+const valueBonus = computed(() => collectionManager.getTotalBonus('itemValue'))
 </script>
