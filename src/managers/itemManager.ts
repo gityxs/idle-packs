@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 
-export type ItemType = 'egg' | 'mystical' | 'rick' | 'morty' | 'psychic' | 'dragon' | 'colony' | 'fakemon'
+export type ItemType = 'egg' | 'mystical' | 'rick' | 'morty' | 'psychic' | 'dragon' | 'colony' | 'fakemon' | 'mythical' | 'ancient'
 
 export interface ItemDefinition {
   id: string
@@ -312,6 +312,339 @@ export class ItemManager {
           value: 'dracelium',
         },
       },
+    })
+
+    this.registerItem({
+      id: 'unicorn-horn',
+      name: 'Unicorn Horn',
+      value: 2500,
+      rarity: 'rare',
+      coinsPerMinute: 3800,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'phoenix-feather',
+      name: 'Phoenix Feather',
+      value: 3000,
+      rarity: 'epic',
+      coinsPerMinute: 4200,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'dragon-scale',
+      name: 'Dragon Scale',
+      value: 2800,
+      rarity: 'rare',
+      coinsPerMinute: 4000,
+      types: ['mythical', 'dragon'],
+    })
+
+    this.registerItem({
+      id: 'griffin-claw',
+      name: 'Griffin Claw',
+      value: 2400,
+      rarity: 'uncommon',
+      coinsPerMinute: 3600,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'manticore-mane',
+      name: 'Manticore Mane',
+      value: 3500,
+      rarity: 'epic',
+      coinsPerMinute: 4500,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'basilisk-eye',
+      name: 'Basilisk Eye',
+      value: 4000,
+      rarity: 'epic',
+      coinsPerMinute: 5000,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'hydra-fang',
+      name: 'Hydra Fang',
+      value: 3200,
+      rarity: 'rare',
+      coinsPerMinute: 4300,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'pegasus-feather',
+      name: 'Pegasus Feather',
+      value: 2600,
+      rarity: 'uncommon',
+      coinsPerMinute: 3800,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'sphinx-riddle-stone',
+      name: 'Sphinx Riddle Stone',
+      value: 4500,
+      rarity: 'epic',
+      coinsPerMinute: 5500,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'minotaur-horn',
+      name: 'Minotaur Horn',
+      value: 2800,
+      rarity: 'rare',
+      coinsPerMinute: 4000,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'centaur-bow',
+      name: 'Centaur Bow',
+      value: 3000,
+      rarity: 'rare',
+      coinsPerMinute: 4200,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'mermaid-tear',
+      name: 'Mermaid Tear',
+      value: 20_000,
+      rarity: 'legendary',
+      coinsPerMinute: 10_000,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'leprechaun-coin',
+      name: 'Leprechaun Coin',
+      value: 5000,
+      rarity: 'epic',
+      coinsPerMinute: 6000,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'pixie-dust',
+      name: 'Pixie Dust',
+      value: 2500,
+      rarity: 'uncommon',
+      coinsPerMinute: 3700,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'faun-flute',
+      name: 'Faun Flute',
+      value: 2300,
+      rarity: 'uncommon',
+      coinsPerMinute: 3500,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'yeti-fur',
+      name: 'Yeti Fur',
+      value: 3200,
+      rarity: 'rare',
+      coinsPerMinute: 4300,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'kraken-ink',
+      name: 'Kraken Ink',
+      value: 4800,
+      rarity: 'epic',
+      coinsPerMinute: 5800,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'djinn-lamp',
+      name: 'Djinn Lamp',
+      value: 15_000,
+      rarity: 'legendary',
+      coinsPerMinute: 9000,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'wyvern-wing',
+      name: 'Wyvern Wing Membrane',
+      value: 3500,
+      rarity: 'rare',
+      coinsPerMinute: 4500,
+      types: ['mythical', 'dragon'],
+    })
+
+    this.registerItem({
+      id: 'salamander-ember',
+      name: 'Salamander Ember',
+      value: 2700,
+      rarity: 'uncommon',
+      coinsPerMinute: 3900,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'chimera-heart',
+      name: 'Chimera Heart',
+      value: 18_000,
+      rarity: 'legendary',
+      coinsPerMinute: 9500,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'fairy-lantern',
+      name: 'Fairy Lantern',
+      value: 2600,
+      rarity: 'uncommon',
+      coinsPerMinute: 3800,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'kelpie-horseshoe',
+      name: 'Kelpie Horseshoe',
+      value: 3300,
+      rarity: 'rare',
+      coinsPerMinute: 4400,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'siren-shell',
+      name: 'Siren Shell',
+      value: 3100,
+      rarity: 'rare',
+      coinsPerMinute: 4200,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'gorgon-hair',
+      name: 'Gorgon Hair Strand', 
+      value: 4200,
+      rarity: 'epic',
+      coinsPerMinute: 5200,
+      types: ['mythical'],
+    })
+
+    this.registerItem({
+      id: 'eye-of-horus',
+      name: 'Eye of Horus Amulet',
+      value: 25000,
+      rarity: 'rare',
+      coinsPerMinute: 8500,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'babylonian-tablet',
+      name: 'Babylonian Clay Tablet',
+      value: 45000,
+      rarity: 'epic',
+      coinsPerMinute: 12000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'mayan-dagger',
+      name: 'Mayan Jade Dagger',
+      value: 75000,
+      rarity: 'epic',
+      coinsPerMinute: 15000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'olmec-shard',
+      name: 'Olmec Head Shard',
+      value: 150000,
+      rarity: 'legendary',
+      coinsPerMinute: 25000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'atlantean-pearl',
+      name: 'Atlantean Pearl',
+      value: 500000,
+      rarity: 'legendary',
+      coinsPerMinute: 45000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'rosetta-fragment',
+      name: 'Rosetta Stone Fragment',
+      value: 250000,
+      rarity: 'epic',
+      coinsPerMinute: 30000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'anubis-ankh',
+      name: "Anubis' Ankh",
+      value: 350000,
+      rarity: 'legendary',
+      coinsPerMinute: 35000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'labyrinth-key',
+      name: 'Labyrinth Key',
+      value: 180000,
+      rarity: 'epic',
+      coinsPerMinute: 28000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'aztec-calendar',
+      name: 'Aztec Calendar Disc',
+      value: 750000,
+      rarity: 'legendary',
+      coinsPerMinute: 55000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'oracle-goblet',
+      name: "Oracle's Goblet",
+      value: 450000,
+      rarity: 'legendary',
+      coinsPerMinute: 40000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'nefertiti-crown',
+      name: "Nefertiti's Crown",
+      value: 850000,
+      rarity: 'legendary',
+      coinsPerMinute: 65000,
+      types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'ziggurat-stone',
+      name: 'Carved Ziggurat Stone',
+      value: 95000,
+      rarity: 'epic',
+      coinsPerMinute: 18000,
+      types: ['ancient'],
     })
   }
 
