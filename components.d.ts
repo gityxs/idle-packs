@@ -17,6 +17,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SaveLoadMenu: typeof import('./src/components/SaveLoadMenu.vue')['default']
+    Settings: typeof import('./src/components/Settings.vue')['default']
     SynergyInfo: typeof import('./src/components/SynergyInfo.vue')['default']
     TypeChip: typeof import('./src/components/TypeChip.vue')['default']
     Upgrades: typeof import('./src/components/Upgrades.vue')['default']

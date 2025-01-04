@@ -60,9 +60,12 @@
           <button @click="activeTab = 'collection'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
             activeTab === 'collection'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          ]">
+              : store.hasOpenedFirstPack
+                ? 'text-gray-500 hover:text-gray-700'
+                : 'text-gray-300 cursor-not-allowed'
+          ]" :disabled="!store.hasOpenedFirstPack">
             Collection
+            <span v-if="!store.hasOpenedFirstPack" class="text-xs ml-1">(Open a pack first)</span>
           </button>
           <button @click="activeTab = 'achievements'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
             activeTab === 'achievements'
@@ -70,6 +73,13 @@
               : 'text-gray-500 hover:text-gray-700'
           ]">
             Achievements
+          </button>
+          <button @click="activeTab = 'settings'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+            activeTab === 'settings'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+            Settings
           </button>
         </nav>
       </div>
@@ -284,14 +294,19 @@
         <Upgrades />
       </div>
 
-      <!-- Add new tab content -->
-      <div v-else-if="activeTab === 'collection'">
+      <!-- Update the tab content section to prevent showing collection when disabled -->
+      <div v-else-if="activeTab === 'collection' && store.hasOpenedFirstPack">
         <Collection :format-number="formatNumber" />
       </div>
 
       <!-- Add tab content -->
       <div v-else-if="activeTab === 'achievements'">
         <Achievements :format-number="formatNumber" />
+      </div>
+
+      <!-- Add settings tab content -->
+      <div v-else-if="activeTab === 'settings'">
+        <Settings />
       </div>
     </div>
 
@@ -320,6 +335,7 @@ import SaveLoadMenu from '../components/SaveLoadMenu.vue'
 import SynergyInfo from '../components/SynergyInfo.vue'
 import TypeChip from '../components/TypeChip.vue'
 import Achievements from '../components/Achievements.vue'
+import Settings from '../components/Settings.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')

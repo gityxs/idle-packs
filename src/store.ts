@@ -65,6 +65,7 @@ interface SaveData {
   settings: { showAnimations: boolean }
   hasPerformedFirstAction: boolean
   lastBackupReminder: number
+  hasOpenedFirstPack: boolean
 }
 
 export const useStore = defineStore('main', {
@@ -436,6 +437,8 @@ export const useStore = defineStore('main', {
     hasPerformedFirstAction: false,
 
     lastBackupReminder: 0, // timestamp of last backup reminder
+
+    hasOpenedFirstPack: false,
   }),
 
   actions: {
@@ -565,6 +568,8 @@ export const useStore = defineStore('main', {
       this.updateAchievements()
 
       this.saveToLocalStorage()
+
+      this.hasOpenedFirstPack = true
 
       return allItems
     },
@@ -840,6 +845,7 @@ export const useStore = defineStore('main', {
         settings: { showAnimations: this.settings.showAnimations },
         hasPerformedFirstAction: this.hasPerformedFirstAction,
         lastBackupReminder: this.lastBackupReminder,
+        hasOpenedFirstPack: this.hasOpenedFirstPack,
       }
     },
 
@@ -920,6 +926,8 @@ export const useStore = defineStore('main', {
 
         this.lastBackupReminder = saveData.lastBackupReminder ?? 0
         this.checkBackupReminder()
+
+        this.hasOpenedFirstPack = saveData.hasOpenedFirstPack ?? false
 
         console.log('Save data loaded successfully')
       } catch (error) {

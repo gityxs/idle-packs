@@ -2,8 +2,9 @@
     <div class="space-y-4">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Equipment</h2>
-            <div class="text-lg text-green-600">
-                +{{ production }}
+            <div class="text-lg">
+                <span class="text-green-600">+{{ production }}</span>
+                <span class="text-gray-500 text-sm ml-1">(+{{ totalBonusPercent }}%)</span>
             </div>
         </div>
 
@@ -62,11 +63,20 @@ import { useStore } from '../store'
 import { formatNumber } from '../utils/format'
 import BigNumber from 'bignumber.js'
 import { itemManager } from '../managers/itemManager'
+import { achievementManager } from '../managers/achievementManager'
+import { collectionManager } from '../managers/collectionManager'
 import SynergyInfo from '../components/SynergyInfo.vue'
 import TypeChip from '../components/TypeChip.vue'
 
 const store = useStore()
 const production = computed(() => store.formattedProduction)
+
+const totalBonusPercent = computed(() => {
+    const achievementBonus = achievementManager.getTotalBonus('coinProduction')
+    const collectionBonus = collectionManager.getTotalBonus('coinProduction')
+    const totalBonus = achievementBonus + collectionBonus
+    return Math.round(totalBonus * 100)
+})
 
 const getItemProduction = (itemId?: string) => {
     if (!itemId) return new BigNumber(0)
