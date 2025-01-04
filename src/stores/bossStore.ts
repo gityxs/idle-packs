@@ -178,12 +178,10 @@ export const useBossStore = defineStore('boss', {
 
     addExperienceToItem(item: ItemWithCombatStats, experience: number) {
       item.combatStats.experience += experience
-      console.log(`Added ${experience} XP to ${item.id}`)
 
       while (item.combatStats.experience >= item.combatStats.requiredExperience) {
         item.combatStats.experience -= item.combatStats.requiredExperience
         item.combatStats.level++
-        console.log(`${item.id} leveled up to ${item.combatStats.level}!`)
 
         // Update required experience for next level
         item.combatStats.requiredExperience = itemManager.calculateRequiredExperience(item.combatStats.level)
@@ -195,7 +193,6 @@ export const useBossStore = defineStore('boss', {
           item.combatStats.attack = newStats.attack
           item.combatStats.defense = newStats.defense
           item.combatStats.health = newStats.health
-          console.log(`New stats - ATK: ${newStats.attack}, DEF: ${newStats.defense}, HP: ${newStats.health}`)
         }
       }
     },
