@@ -560,6 +560,8 @@ export const useStore = defineStore('main', {
 
       this.updateAchievements()
 
+      this.saveToLocalStorage()
+
       return allItems
     },
 
@@ -608,6 +610,8 @@ export const useStore = defineStore('main', {
 
       this.hasPerformedFirstAction = true
 
+      this.saveToLocalStorage()
+
       return true
     },
 
@@ -619,6 +623,8 @@ export const useStore = defineStore('main', {
         // Update collection
         const totalCollected = this.inventory.filter(i => i.id === item.id).reduce((sum, i) => sum + i.amount, 0)
         collectionManager.updateCollection(item.id, totalCollected)
+
+        this.saveToLocalStorage()
       })
     },
 
@@ -644,6 +650,7 @@ export const useStore = defineStore('main', {
 
       if (this.inventory.length > 0) {
         this.hasPerformedFirstAction = true
+        this.saveToLocalStorage()
       }
     },
 
@@ -666,6 +673,8 @@ export const useStore = defineStore('main', {
 
       this.hasPerformedFirstAction = true
 
+      this.saveToLocalStorage()
+
       return true
     },
 
@@ -679,6 +688,9 @@ export const useStore = defineStore('main', {
 
       // Add back to inventory
       this.addItemToInventory(equippedItem)
+
+      this.saveToLocalStorage()
+
       return true
     },
 
