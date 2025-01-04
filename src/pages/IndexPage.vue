@@ -100,9 +100,7 @@
               <div v-if="pack.purchaseLimit" class="mt-2 text-sm">
                 <p class="text-gray-600">
                   Limit: {{ pack.purchaseLimit.remainingPurchases }}/{{ pack.purchaseLimit.amount }}
-                  per {{ pack.purchaseLimit.minutes >= 1440 ? Math.floor(pack.purchaseLimit.minutes / 1440) + ' days' :
-                    pack.purchaseLimit.minutes >= 60 ? Math.floor(pack.purchaseLimit.minutes / 60) + ' hours' :
-                      pack.purchaseLimit.minutes + ' minutes' }}
+                  per {{ formatTime(pack.purchaseLimit.minutes * 60 * 1000) }}
                 </p>
                 <p v-if="pack.purchaseLimit.remainingPurchases < pack.purchaseLimit.amount" class="text-blue-600">
                   Resets in {{ formatTime(store.getPackTimeRemaining(pack.id)) }}

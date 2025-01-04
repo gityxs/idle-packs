@@ -29,6 +29,10 @@
                             class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
                             All
                         </button>
+                        <button v-if="isAnimating && props.showAnimations" @click="skipAnimation"
+                            class="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-gray-600">
+                            Skip
+                        </button>
                     </div>
                 </div>
 
@@ -38,7 +42,7 @@
                         <span v-if="remainingItems > 0">
                             Remaining Items: {{ remainingItems }}
                         </span>
-                        <span v-if="remainingPacks > 0" class="text-blue-600">
+                        <span v-if="remainingPacks && remainingPacks > 0" class="text-blue-600">
                             ({{ remainingPacks }} more packs)
                         </span>
                     </div>
@@ -58,14 +62,14 @@
             <div class="">
                 <!-- Revealed items -->
                 <div class="space-y-3 max-h-[60vh] overflow-y-auto p-4">
-                    <div v-for="(item, index) in stackedItems" :key="item.id"
+                    <div v-for="(item, index) in stackedItems" :key="item.id" ref="itemRefs"
                         class="border rounded-lg p-4 mb-4 animate-fade-in" :class="{
                             'border-gray-300': item.rarity === 'common',
                             'border-green-400': item.rarity === 'uncommon',
                             'border-blue-400': item.rarity === 'rare',
                             'border-purple-400': item.rarity === 'epic',
                             'border-yellow-400': item.rarity === 'legendary',
-                            'shadow-glow': index === stackedItems.length - 1 && props.showAnimations,
+                            'shadow-glow': item.id === revealedItems[revealedItems.length - 1]?.id && props.showAnimations,
                         }">
                         <div>
                             <h3 class="font-bold">{{ item.name }}</h3>
@@ -135,24 +139,39 @@ const stackedItems = computed(() => {
     return Array.from(itemMap.values())
 })
 
+const itemRefs = ref<HTMLElement[]>([])
+
 const revealNext = () => {
     if (remainingItems.value > 0) {
         startShakeAnimation()
         const nextItem = props.items[revealedItems.value.length]
         revealedItems.value.push(nextItem)
+
+        // Scroll to the new item after a short delay to allow for rendering
+        setTimeout(() => {
+            const lastItemRef = itemRefs.value[stackedItems.value.findIndex(
+                item => item.id === nextItem.id
+            )]
+            if (lastItemRef) {
+                lastItemRef.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+        }, 100)
     }
 }
 
+const isAnimating = ref(false)
+
 const revealAll = () => {
     if (!props.showAnimations) {
-        // Instantly reveal all items
         revealedItems.value = [...props.items]
     } else {
-        // Reveal items with animation
+        isAnimating.value = true
         const reveal = () => {
             if (remainingItems.value > 0) {
                 revealNext()
-                setTimeout(reveal, 700) // Increased delay to account for shake animation
+                setTimeout(reveal, 700)
+            } else {
+                isAnimating.value = false
             }
         }
         reveal()
@@ -218,6 +237,11 @@ const startShakeAnimation = () => {
     setTimeout(() => {
         isShaking.value = false
     }, 500) // Animation duration
+}
+
+const skipAnimation = () => {
+    isAnimating.value = false
+    revealedItems.value = [...props.items]
 }
 </script>
 
