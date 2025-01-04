@@ -1,6 +1,17 @@
+import type { Item } from '@/types'
 import BigNumber from 'bignumber.js'
 
-export type ItemType = 'egg' | 'mystical' | 'rick' | 'morty' | 'psychic' | 'dragon' | 'colony' | 'fakemon' | 'mythical' | 'ancient'
+export type ItemType =
+  | 'egg'
+  | 'mystical'
+  | 'rick'
+  | 'morty'
+  | 'psychic'
+  | 'dragon'
+  | 'colony'
+  | 'fakemon'
+  | 'mythical'
+  | 'ancient'
 
 export interface ItemDefinition {
   id: string
@@ -109,6 +120,14 @@ export class ItemManager {
       rarity: 'epic',
       coinsPerMinute: 900, // 15 * 60
       types: ['rick'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.2, // 20% bonus
+        condition: {
+          type: 'itemType',
+          value: ['rick', 'morty'],
+        },
+      },
     })
 
     this.registerItem({
@@ -182,6 +201,15 @@ export class ItemManager {
       rarity: 'rare',
       coinsPerMinute: 300,
       types: ['fakemon'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.15, // 15% bonus
+        condition: {
+          type: 'itemType',
+          value: ['fakemon'],
+          minCount: 3,
+        },
+      },
     })
 
     this.registerItem({
@@ -209,6 +237,14 @@ export class ItemManager {
       rarity: 'legendary',
       coinsPerMinute: 3000,
       types: ['fakemon', 'dragon'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.25, // 25% bonus
+        condition: {
+          type: 'itemType',
+          value: ['dragon'],
+        },
+      },
     })
 
     // Daily Pack Items
@@ -330,6 +366,15 @@ export class ItemManager {
       rarity: 'epic',
       coinsPerMinute: 4200,
       types: ['mythical'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.25, // 25% bonus
+        condition: {
+          type: 'itemType',
+          value: ['dragon'],
+          minCount: 2,
+        },
+      },
     })
 
     this.registerItem({
@@ -339,6 +384,14 @@ export class ItemManager {
       rarity: 'rare',
       coinsPerMinute: 4000,
       types: ['mythical', 'dragon'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.15, // 15% bonus
+        condition: {
+          type: 'itemType',
+          value: ['dragon', 'mythical'],
+        },
+      },
     })
 
     this.registerItem({
@@ -420,6 +473,15 @@ export class ItemManager {
       rarity: 'legendary',
       coinsPerMinute: 10_000,
       types: ['mythical'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.3, // 30% bonus
+        condition: {
+          type: 'itemType',
+          value: ['mythical'],
+          minCount: 3,
+        },
+      },
     })
 
     this.registerItem({
@@ -532,7 +594,7 @@ export class ItemManager {
 
     this.registerItem({
       id: 'gorgon-hair',
-      name: 'Gorgon Hair Strand', 
+      name: 'Gorgon Hair Strand',
       value: 4200,
       rarity: 'epic',
       coinsPerMinute: 5200,
@@ -582,6 +644,15 @@ export class ItemManager {
       rarity: 'legendary',
       coinsPerMinute: 45000,
       types: ['ancient'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.4, // 40% bonus
+        condition: {
+          type: 'itemType',
+          value: ['ancient'],
+          minCount: 3,
+        },
+      },
     })
 
     this.registerItem({
@@ -636,6 +707,14 @@ export class ItemManager {
       rarity: 'legendary',
       coinsPerMinute: 65000,
       types: ['ancient'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.2, // 20% bonus
+        condition: {
+          type: 'specificItem',
+          value: 'eye-of-horus',
+        },
+      },
     })
 
     this.registerItem({

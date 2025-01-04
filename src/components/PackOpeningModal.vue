@@ -196,6 +196,14 @@ onBeforeUnmount(() => {
 })
 
 const close = () => {
+    // If there are remaining items, reveal them all first
+    if (remainingItems.value > 0) {
+        skipAnimation()
+        revealedItems.value = [...props.items]
+        return
+    }
+
+    // Only close if all items are revealed
     revealedItems.value = []
     emit('close')
 }

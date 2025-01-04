@@ -779,8 +779,14 @@ export const useStore = defineStore('main', {
         case 'packTimer': {
           const pack = this.availablePacks.find(p => p.id === upgrade.packId)
           if (pack?.purchaseLimit) {
-            const reduction = upgrade.increaseAmount || 0
-            pack.purchaseLimit.minutes *= 1 - reduction
+            // Get the base timer for this pack type
+            const baseTimer = pack.purchaseLimit.minutes
+
+            // Calculate total reduction from all levels of this upgrade
+            const totalReduction = (upgrade.increaseAmount || 0) * upgrade.level
+
+            // Apply the reduction to the base timer (minimum 10% of original time)
+            pack.purchaseLimit.minutes = Math.max(baseTimer * 0.1, baseTimer * (1 - totalReduction))
           }
           break
         }
