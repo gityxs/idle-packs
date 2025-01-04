@@ -257,6 +257,17 @@ export class AchievementManager {
       .filter(a => a.completed && a.reward.type === type)
       .reduce((sum, a) => sum + a.reward.bonus, 0)
   }
+
+  loadSaveData(savedAchievements: Achievement[]) {
+    // Update existing achievements with saved progress
+    savedAchievements.forEach(savedAchievement => {
+      const achievement = this.getAchievement(savedAchievement.id)
+      if (achievement) {
+        achievement.progress = savedAchievement.progress
+        achievement.completed = savedAchievement.completed
+      }
+    })
+  }
 }
 
 export const achievementManager = new AchievementManager()

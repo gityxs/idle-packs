@@ -66,6 +66,9 @@ interface SaveData {
   hasPerformedFirstAction: boolean
   lastBackupReminder: number
   hasOpenedFirstPack: boolean
+  totalPacksOpened: number
+  totalDailyPacksOpened: number
+  totalCoinsEarned: string
 }
 
 export const useStore = defineStore('main', {
@@ -846,6 +849,9 @@ export const useStore = defineStore('main', {
         hasPerformedFirstAction: this.hasPerformedFirstAction,
         lastBackupReminder: this.lastBackupReminder,
         hasOpenedFirstPack: this.hasOpenedFirstPack,
+        totalPacksOpened: this.totalPacksOpened,
+        totalDailyPacksOpened: this.totalDailyPacksOpened,
+        totalCoinsEarned: this.totalCoinsEarned.toString(),
       }
     },
 
@@ -928,6 +934,14 @@ export const useStore = defineStore('main', {
         this.checkBackupReminder()
 
         this.hasOpenedFirstPack = saveData.hasOpenedFirstPack ?? false
+
+        // Load totals
+        this.totalPacksOpened = saveData.totalPacksOpened ?? 0
+        this.totalDailyPacksOpened = saveData.totalDailyPacksOpened ?? 0
+        this.totalCoinsEarned = new BigNumber(saveData.totalCoinsEarned ?? '0')
+
+        // Update achievements based on loaded totals
+        this.updateAchievements()
 
         console.log('Save data loaded successfully')
       } catch (error) {
