@@ -53,6 +53,37 @@
 
                 <!-- Add synergy info -->
                 <SynergyInfo v-if="itemManager.getItem(item.id)" :item="itemManager.getItem(item.id)!" />
+
+                <!-- Add combat stats -->
+                <div v-if="getItemCombatStats(item)" class="mt-1">
+                    <div class="grid grid-cols-3 gap-1 text-xs">
+                        <div class="text-center">
+                            <span class="font-bold text-red-600">{{ getItemCombatStats(item).attack }}</span>
+                            <span class="text-gray-600"> ATK</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="font-bold text-blue-600">{{ getItemCombatStats(item).defense }}</span>
+                            <span class="text-gray-600"> DEF</span>
+                        </div>
+                        <div class="text-center">
+                            <span class="font-bold text-green-600">{{ getItemCombatStats(item).health }}</span>
+                            <span class="text-gray-600"> HP</span>
+                        </div>
+                    </div>
+                    <!-- Add level and experience bar -->
+                    <div class="mt-1">
+                        <div class="text-xs text-center">Level {{ getItemCombatStats(item).level }}</div>
+                        <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+                            <div class="bg-blue-500 rounded-full h-1 transition-all duration-200"
+                                :style="{ width: `${(getItemCombatStats(item).experience / getItemCombatStats(item).requiredExperience) * 100}%` }">
+                            </div>
+                        </div>
+                        <div class="text-xs text-center text-gray-600">
+                            {{ getItemCombatStats(item).experience }}/{{ getItemCombatStats(item).requiredExperience }}
+                            XP
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -62,11 +93,12 @@
 import { useStore } from '../store'
 import { formatNumber } from '../utils/format'
 import BigNumber from 'bignumber.js'
-import { itemManager } from '../managers/itemManager'
+import { itemManager, type ItemWithCombatStats } from '../managers/itemManager'
 import { achievementManager } from '../managers/achievementManager'
 import { collectionManager } from '../managers/collectionManager'
 import SynergyInfo from '../components/SynergyInfo.vue'
 import TypeChip from '../components/TypeChip.vue'
+import type { Item } from '@/types'
 
 const store = useStore()
 const production = computed(() => store.formattedProduction)
@@ -82,5 +114,10 @@ const getItemProduction = (itemId?: string) => {
     if (!itemId) return new BigNumber(0)
     const definition = itemManager.getItem(itemId)
     return definition ? new BigNumber(definition.coinsPerMinute) : new BigNumber(0)
+}
+
+// Add helper function to safely get combat stats
+const getItemCombatStats = (item: Item) => {
+    return (item as ItemWithCombatStats).combatStats
 }
 </script>

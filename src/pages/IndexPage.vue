@@ -57,6 +57,13 @@
           ]">
             Upgrades
           </button>
+          <button @click="activeTab = 'bosses'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+            activeTab === 'bosses'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          ]">
+            Boss Fights
+          </button>
           <button @click="activeTab = 'collection'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
             activeTab === 'collection'
               ? 'border-b-2 border-blue-500 text-blue-600'
@@ -239,7 +246,6 @@
                   }">
                     {{ item.rarity }}
                   </p>
-                  <!-- Add type chips -->
                   <div class="flex flex-wrap gap-1">
                     <TypeChip v-for="type in itemManager.getItem(item.id)?.types" :key="type" :type="type" />
                   </div>
@@ -250,7 +256,24 @@
               </div>
               <div class="text-right">
                 <p>Amount: {{ item.amount }}</p>
-                <p>Value: {{ formatNumber(item.value) }} coins each</p>
+                <p>Value: {{ formatNumber(item.value) }} coins</p>
+              </div>
+            </div>
+
+            <!-- Add combat stats display -->
+            <div v-if="itemManager.getItem(item.id)?.combatStats"
+              class="mb-2 grid grid-cols-3 gap-2 p-2 bg-gray-50 rounded">
+              <div class="text-center">
+                <div class="font-bold text-red-600">{{ itemManager.getItem(item.id)?.combatStats?.attack }}</div>
+                <div class="text-xs text-gray-600">Attack</div>
+              </div>
+              <div class="text-center">
+                <div class="font-bold text-blue-600">{{ itemManager.getItem(item.id)?.combatStats?.defense }}</div>
+                <div class="text-xs text-gray-600">Defense</div>
+              </div>
+              <div class="text-center">
+                <div class="font-bold text-green-600">{{ itemManager.getItem(item.id)?.combatStats?.health }}</div>
+                <div class="text-xs text-gray-600">Health</div>
               </div>
             </div>
 
@@ -308,6 +331,11 @@
       <div v-else-if="activeTab === 'settings'">
         <Settings />
       </div>
+
+      <!-- Add boss fights tab content -->
+      <div v-show="activeTab === 'bosses'">
+        <BossFights />
+      </div>
     </div>
 
     <PackOpeningModal v-if="openingItems.length > 0" :show="true" :items="openingItems" :pack-name="openingPackName"
@@ -336,6 +364,7 @@ import SynergyInfo from '../components/SynergyInfo.vue'
 import TypeChip from '../components/TypeChip.vue'
 import Achievements from '../components/Achievements.vue'
 import Settings from '../components/Settings.vue'
+import BossFights from '../components/BossFights.vue'
 const MAX_PACKS_PER_OPEN = 1000
 const store = useStore()
 const activeTab = ref('packs')

@@ -3,6 +3,9 @@ import BigNumber from 'bignumber.js'
 import { itemManager, type ItemDefinition, type ItemDrop } from './managers/itemManager'
 import { achievementManager } from './managers/achievementManager'
 import { collectionManager } from './managers/collectionManager'
+import { useBossStore } from './stores/bossStore'
+
+export type Store = ReturnType<typeof useStore>
 
 interface Item {
   id: string
@@ -52,9 +55,9 @@ interface Upgrade {
 
 interface SaveData {
   coins: string
-  inventory: Item[]
+  inventory: (Item | ItemWithCombatStats)[]
   ownedPacks: OwnedPack[]
-  equippedItems: Item[]
+  equippedItems: (Item | ItemWithCombatStats)[]
   maxEquippedItems: number
   maxPackStorage: number
   upgrades: Upgrade[]
@@ -69,6 +72,11 @@ interface SaveData {
   totalPacksOpened: number
   totalDailyPacksOpened: number
   totalCoinsEarned: string
+  bossData?: BossSaveData
+}
+
+export interface State {
+  highestBossDefeated: number
 }
 
 export const useStore = defineStore('main', {
@@ -442,6 +450,8 @@ export const useStore = defineStore('main', {
     lastBackupReminder: 0, // timestamp of last backup reminder
 
     hasOpenedFirstPack: false,
+
+    highestBossDefeated: 0,
   }),
 
   actions: {
@@ -833,6 +843,7 @@ export const useStore = defineStore('main', {
     },
 
     getSaveData(): SaveData {
+      const bossStore = useBossStore()
       return {
         coins: this.coins.toString(),
         inventory: this.inventory.map(item => ({
@@ -858,6 +869,7 @@ export const useStore = defineStore('main', {
         totalPacksOpened: this.totalPacksOpened,
         totalDailyPacksOpened: this.totalDailyPacksOpened,
         totalCoinsEarned: this.totalCoinsEarned.toString(),
+        bossData: bossStore.getSaveData(),
       }
     },
 
@@ -871,17 +883,75 @@ export const useStore = defineStore('main', {
           showAnimations: saveData.settings?.showAnimations ?? true,
         }
 
-        // Load inventory with BigNumber conversion
-        this.inventory = (saveData.inventory ?? []).map(item => ({
-          ...item,
-          value: new BigNumber(item.value),
-        }))
+        // Load inventory with combat stats
+        this.inventory = saveData.inventory.map(item => {
+          const newItem = {
+            ...item,
+            value: new BigNumber(item.value),
+          }
 
-        // Load equipped items with BigNumber conversion
-        this.equippedItems = (saveData.equippedItems ?? []).map(item => ({
-          ...item,
-          value: new BigNumber(item.value),
-        }))
+          // Properly reinitialize combat stats if the item definition has them
+          const definition = itemManager.getItem(item.id)
+          if (definition?.combatStats) {
+            const savedCombatStats = (item as ItemWithCombatStats).combatStats || {}
+            ;(newItem as ItemWithCombatStats).combatStats = {
+              ...definition.combatStats,
+              level: savedCombatStats.level || 1,
+              experience: savedCombatStats.experience || 0,
+              requiredExperience:
+                savedCombatStats.requiredExperience ||
+                itemManager.calculateRequiredExperience(savedCombatStats.level || 1),
+            }
+
+            // Recalculate stats based on level
+            if ((newItem as ItemWithCombatStats).combatStats.level > 1) {
+              const stats = itemManager.calculateStatsForLevel(
+                definition.combatStats,
+                (newItem as ItemWithCombatStats).combatStats.level
+              )
+              ;(newItem as ItemWithCombatStats).combatStats.attack = stats.attack
+              ;(newItem as ItemWithCombatStats).combatStats.defense = stats.defense
+              ;(newItem as ItemWithCombatStats).combatStats.health = stats.health
+            }
+
+            return newItem as ItemWithCombatStats
+          }
+          return newItem
+        })
+
+        // Load equipped items with combat stats (same logic as inventory)
+        this.equippedItems = saveData.equippedItems.map(item => {
+          const newItem = {
+            ...item,
+            value: new BigNumber(item.value),
+          }
+
+          const definition = itemManager.getItem(item.id)
+          if (definition?.combatStats) {
+            const savedCombatStats = (item as ItemWithCombatStats).combatStats || {}
+            ;(newItem as ItemWithCombatStats).combatStats = {
+              ...definition.combatStats,
+              level: savedCombatStats.level || 1,
+              experience: savedCombatStats.experience || 0,
+              requiredExperience:
+                savedCombatStats.requiredExperience ||
+                itemManager.calculateRequiredExperience(savedCombatStats.level || 1),
+            }
+
+            if ((newItem as ItemWithCombatStats).combatStats.level > 1) {
+              const stats = itemManager.calculateStatsForLevel(
+                definition.combatStats,
+                (newItem as ItemWithCombatStats).combatStats.level
+              )
+              ;(newItem as ItemWithCombatStats).combatStats.attack = stats.attack
+              ;(newItem as ItemWithCombatStats).combatStats.defense = stats.defense
+              ;(newItem as ItemWithCombatStats).combatStats.health = stats.health
+            }
+
+            return newItem as ItemWithCombatStats
+          }
+          return newItem
+        })
 
         // Load owned packs
         this.ownedPacks = saveData.ownedPacks ?? []
@@ -948,6 +1018,12 @@ export const useStore = defineStore('main', {
 
         // Update achievements based on loaded totals
         this.updateAchievements()
+
+        // Load boss data if it exists
+        if (saveData.bossData) {
+          const bossStore = useBossStore()
+          bossStore.loadSaveData(saveData.bossData)
+        }
 
         console.log('Save data loaded successfully')
       } catch (error) {
@@ -1146,6 +1222,16 @@ export const useStore = defineStore('main', {
             reminder.remove()
           }
         }, 60000)
+      }
+    },
+
+    getItemDefinition(itemId: string): ItemDefinition | undefined {
+      return itemManager.getItem(itemId)
+    },
+
+    updateHighestBoss(bossId: number) {
+      if (bossId > this.highestBossDefeated) {
+        this.highestBossDefeated = bossId
       }
     },
   },

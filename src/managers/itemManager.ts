@@ -13,6 +13,15 @@ export type ItemType =
   | 'mythical'
   | 'ancient'
 
+export interface CombatStats {
+  attack: number
+  defense: number
+  health: number
+  level: number
+  experience: number
+  requiredExperience: number
+}
+
 export interface ItemDefinition {
   id: string
   name: string
@@ -20,8 +29,13 @@ export interface ItemDefinition {
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
   coinsPerMinute: number
   types?: ItemType[]
+  combatStats?: {
+    attack: number
+    defense: number
+    health: number
+  }
   synergyEffect?: {
-    type: 'coinGen'
+    type: 'coinGen' | 'combat'
     bonus: number
     condition: {
       type: 'itemType' | 'specificItem' | 'itemCount'
@@ -34,6 +48,10 @@ export interface ItemDefinition {
 export interface ItemDrop {
   itemId: string
   dropChance: number
+}
+
+export interface ItemWithCombatStats extends Item {
+  combatStats: CombatStats
 }
 
 export class ItemManager {
@@ -75,6 +93,11 @@ export class ItemManager {
       rarity: 'uncommon',
       coinsPerMinute: 48, // 0.8 * 60
       types: ['rick'],
+      combatStats: {
+        attack: 15,
+        defense: 5,
+        health: 25,
+      },
     })
 
     this.registerItem({
@@ -102,6 +125,11 @@ export class ItemManager {
       rarity: 'rare',
       coinsPerMinute: 240, // 4 * 60
       types: ['rick'],
+      combatStats: {
+        attack: 35,
+        defense: 15,
+        health: 50,
+      },
     })
 
     this.registerItem({
@@ -118,11 +146,16 @@ export class ItemManager {
       name: 'Portal Gun',
       value: 300,
       rarity: 'epic',
-      coinsPerMinute: 900, // 15 * 60
+      coinsPerMinute: 900,
       types: ['rick'],
+      combatStats: {
+        attack: 50,
+        defense: 20,
+        health: 100,
+      },
       synergyEffect: {
-        type: 'coinGen',
-        bonus: 0.2, // 20% bonus
+        type: 'combat',
+        bonus: 0.2,
         condition: {
           type: 'itemType',
           value: ['rick', 'morty'],
@@ -137,6 +170,11 @@ export class ItemManager {
       value: 600,
       rarity: 'epic',
       coinsPerMinute: 1800, // 30 * 60
+      combatStats: {
+        attack: 25,
+        defense: 75,
+        health: 150,
+      },
     })
 
     // Fakemon Items
@@ -366,9 +404,14 @@ export class ItemManager {
       rarity: 'epic',
       coinsPerMinute: 4200,
       types: ['mythical'],
+      combatStats: {
+        attack: 85,
+        defense: 45,
+        health: 150,
+      },
       synergyEffect: {
-        type: 'coinGen',
-        bonus: 0.25, // 25% bonus
+        type: 'combat',
+        bonus: 0.25,
         condition: {
           type: 'itemType',
           value: ['dragon'],
@@ -384,9 +427,14 @@ export class ItemManager {
       rarity: 'rare',
       coinsPerMinute: 4000,
       types: ['mythical', 'dragon'],
+      combatStats: {
+        attack: 20,
+        defense: 100,
+        health: 200,
+      },
       synergyEffect: {
-        type: 'coinGen',
-        bonus: 0.15, // 15% bonus
+        type: 'combat',
+        bonus: 0.15,
         condition: {
           type: 'itemType',
           value: ['dragon', 'mythical'],
@@ -739,11 +787,23 @@ export class ItemManager {
     const definition = this.getItem(id)
     if (!definition) return null
 
-    return {
+    const item: Item = {
       ...definition,
       value: new BigNumber(definition.value),
       amount,
     }
+
+    // Initialize combat stats if the item has them
+    if (definition.combatStats) {
+      ;(item as ItemWithCombatStats).combatStats = {
+        ...definition.combatStats,
+        level: 1,
+        experience: 0,
+        requiredExperience: this.calculateRequiredExperience(1),
+      }
+    }
+
+    return item
   }
 
   rollForItem(drops: ItemDrop[]): string | null {
@@ -762,6 +822,20 @@ export class ItemManager {
 
   getAllItems(): Map<string, ItemDefinition> {
     return this.items
+  }
+
+  calculateRequiredExperience(level: number): number {
+    // Experience formula: 100 * (level ^ 1.5)
+    return Math.floor(100 * Math.pow(level, 1.5))
+  }
+
+  calculateStatsForLevel(baseStats: { attack: number; defense: number; health: number }, level: number) {
+    const multiplier = 1 + (level - 1) * 0.1 // 10% increase per level
+    return {
+      attack: Math.floor(baseStats.attack * multiplier),
+      defense: Math.floor(baseStats.defense * multiplier),
+      health: Math.floor(baseStats.health * multiplier),
+    }
   }
 }
 

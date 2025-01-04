@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Achievements: typeof import('./src/components/Achievements.vue')['default']
+    BossFights: typeof import('./src/components/BossFights.vue')['default']
     Collection: typeof import('./src/components/Collection.vue')['default']
     EquippedItems: typeof import('./src/components/EquippedItems.vue')['default']
     Footer: typeof import('./src/components/Footer.vue')['default']
