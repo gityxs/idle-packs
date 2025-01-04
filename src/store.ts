@@ -275,6 +275,18 @@ export const useStore = defineStore('main', {
         increaseAmount: 1,
       },
       {
+        id: 'equipment-slot-2',
+        name: 'Advanced Equipment Slot',
+        description: 'Add another equipment slot',
+        basePrice: 500_000,
+        priceMultiplier: 5,
+        level: 0,
+        maxLevel: 3,
+        type: 'equipmentSlot',
+        packId: '',
+        increaseAmount: 1,
+      },
+      {
         id: 'morty-pack-limit',
         name: 'Morty Pack Capacity',
         description: 'Increase purchase limit of Morty Pack by 2',
@@ -378,7 +390,7 @@ export const useStore = defineStore('main', {
       },
       {
         id: 'ancient-pack-limit',
-        name: 'Ancient Pack Capacity', 
+        name: 'Ancient Pack Capacity',
         description: 'Increase purchase limit of Ancient Civilization Pack by 2',
         basePrice: 50_000,
         priceMultiplier: 1.5,
