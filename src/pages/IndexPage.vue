@@ -283,12 +283,12 @@
 
       <!-- Add new tab content -->
       <div v-else-if="activeTab === 'collection'">
-        <Collection />
+        <Collection :format-number="formatNumber" />
       </div>
 
       <!-- Add tab content -->
       <div v-else-if="activeTab === 'achievements'">
-        <Achievements />
+        <Achievements :format-number="formatNumber" />
       </div>
     </div>
 

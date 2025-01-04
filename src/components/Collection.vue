@@ -34,7 +34,7 @@
                         </p>
                     </div>
                     <div class="text-right text-sm">
-                        Collected: {{ getCollectionCount(item.id) }}
+                        Collected: {{ getCollectionCountFormatted(item.id) }}
                     </div>
                 </div>
 
@@ -46,7 +46,7 @@
                     }">
                         <div class="flex justify-between items-center">
                             <span>{{ bonus.description }}</span>
-                            <span>{{ getCollectionCount(item.id) }}/{{ bonus.requirement }}</span>
+                            <span>{{ getCollectionCountFormatted(item.id) }}/{{ bonus.requirement }}</span>
                         </div>
                         <!-- Progress bar -->
                         <div class="mt-1 w-full bg-gray-200 rounded-full h-1">
@@ -67,6 +67,11 @@ import { computed } from 'vue'
 import { itemManager } from '../managers/itemManager'
 import { collectionManager } from '../managers/collectionManager'
 import { useStore } from '../store'
+import BigNumber from 'bignumber.js'
+
+const props = defineProps<{
+    formatNumber: (num: BigNumber | number) => string
+}>()
 
 const store = useStore()
 
@@ -84,6 +89,11 @@ const isDiscovered = (itemId: string) => store.discoveredItems.has(itemId)
 const getCollectionCount = (itemId: string) => {
     const entry = collectionManager.getCollectionEntry(itemId)
     return entry?.count ?? 0
+}
+
+const getCollectionCountFormatted = (itemId: string) => {
+    const count = getCollectionCount(itemId)
+    return props.formatNumber(count)
 }
 
 const getCollectionBonuses = (itemId: string) => {

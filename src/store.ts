@@ -457,6 +457,7 @@ export const useStore = defineStore('main', {
         this.updateProduction()
         this.updatePurchaseLimits()
         this.tryAutoBuyPacks()
+        this.updateAchievements()
       }, 1000)
 
       // Add auto-save interval
@@ -651,6 +652,8 @@ export const useStore = defineStore('main', {
         this.inventory = this.inventory.filter(item => item.locked)
       }
 
+      this.updateAchievements()
+
       if (this.inventory.length > 0) {
         this.hasPerformedFirstAction = true
         this.saveToLocalStorage()
@@ -710,6 +713,8 @@ export const useStore = defineStore('main', {
       }, new BigNumber(0))
 
       this.coins = this.coins.plus(production.times(deltaMinutes))
+      this.totalCoinsEarned = this.totalCoinsEarned.plus(production.times(deltaMinutes))
+      this.updateAchievements()
       this.lastUpdate = now
     },
 
@@ -965,11 +970,8 @@ export const useStore = defineStore('main', {
       // Add offline earnings
       if (offlineEarnings.isGreaterThan(0)) {
         this.coins = this.coins.plus(offlineEarnings)
-
-        // Show notification of offline earnings
-        const formattedEarnings = formatNumber(offlineEarnings)
-        const formattedMinutes = Math.floor(minutesOffline)
-        console.log(`Earned ${formattedEarnings} coins while away for ${formattedMinutes} minutes!`)
+        this.totalCoinsEarned = this.totalCoinsEarned.plus(offlineEarnings)
+        this.updateAchievements()
       }
 
       // Update pack purchase limits
@@ -1031,16 +1033,26 @@ export const useStore = defineStore('main', {
       // Track pack openings
       achievementManager.updateProgress('pack-opener-1', this.totalPacksOpened)
       achievementManager.updateProgress('pack-opener-2', this.totalPacksOpened)
+      achievementManager.updateProgress('pack-opener-3', this.totalPacksOpened)
+      achievementManager.updateProgress('pack-opener-4', this.totalPacksOpened)
+      achievementManager.updateProgress('pack-opener-5', this.totalPacksOpened)
 
       // Track daily packs
       achievementManager.updateProgress('daily-collector-1', this.totalDailyPacksOpened)
+      achievementManager.updateProgress('daily-collector-2', this.totalDailyPacksOpened)
 
       // Track unique items
       achievementManager.updateProgress('collector-1', this.discoveredItems.size)
       achievementManager.updateProgress('collector-2', this.discoveredItems.size)
+      achievementManager.updateProgress('collector-3', this.discoveredItems.size)
+      achievementManager.updateProgress('collector-4', this.discoveredItems.size)
 
       // Track total coins
       achievementManager.updateProgress('wealthy-1', this.totalCoinsEarned.toNumber())
+      achievementManager.updateProgress('wealthy-2', this.totalCoinsEarned.toNumber())
+      achievementManager.updateProgress('wealthy-3', this.totalCoinsEarned.toNumber())
+      achievementManager.updateProgress('wealthy-4', this.totalCoinsEarned.toNumber())
+      achievementManager.updateProgress('wealthy-5', this.totalCoinsEarned.toNumber())
     },
 
     toggleItemLock(itemId: string) {

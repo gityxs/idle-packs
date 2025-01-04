@@ -39,7 +39,8 @@
                     <div class="text-right">
                         <div class="text-sm font-medium"
                             :class="achievement.completed ? 'text-green-600' : 'text-gray-600'">
-                            {{ achievement.progress }}/{{ achievement.requirement }}
+                            {{ props.formatNumber(achievement.progress) }}/{{
+                                props.formatNumber(achievement.requirement) }}
                         </div>
                         <div class="text-sm text-gray-500">
                             {{ achievement.reward.type === 'coinProduction' ? 'Coin Production' : 'Item Value' }}
@@ -63,6 +64,10 @@
 import { ref, computed } from 'vue'
 import { achievementManager } from '../managers/achievementManager'
 import type { Achievement } from '../managers/achievementManager'
+
+const props = defineProps<{
+    formatNumber: (number: number) => string
+}>()
 
 const activeCategory = ref<Achievement['category']>('packs')
 const categories: Achievement['category'][] = ['packs', 'items', 'coins', 'daily']

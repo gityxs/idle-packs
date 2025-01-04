@@ -4,7 +4,7 @@
         <div class="absolute inset-0 bg-black bg-opacity-50"></div>
 
         <!-- Modal -->
-        <div class="relative bg-white rounded-lg p-6 max-w-md w-full mx-4"
+        <div class="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 mt-4"
             :class="{ 'animate-shake': props.showAnimations && isShaking }">
             <!-- Fixed Header -->
             <div class="sticky top-0 bg-white rounded-t-lg border-b p-4 z-10">
