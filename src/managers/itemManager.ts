@@ -917,7 +917,7 @@ export class ItemManager {
       value: 550_000,
       rarity: 'legendary',
       coinsPerMinute: 150_000,
-      types: ['ancient', 'mystical'],
+      types: ['ancient', 'mystdrical'],
       combatStats: {
         attack: 250,
         defense: 120,
