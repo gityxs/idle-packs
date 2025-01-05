@@ -53,13 +53,20 @@
             </div>
 
             <!-- Boss health bar -->
-            <div class="w-full bg-gray-200 rounded-full h-4">
-                <div class="bg-red-500 rounded-full h-4 transition-all duration-200"
-                    :style="{ width: `${(bossStore.currentBoss.health / bossStore.currentBoss.maxHealth) * 100}%` }">
+            <div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-red-500 rounded-full h-4 transition-all duration-200"
+                        :style="{ width: `${(bossStore.currentBoss.health / bossStore.currentBoss.maxHealth) * 100}%` }">
+                    </div>
                 </div>
-            </div>
-            <div class="text-center text-sm">
-                {{ bossStore.currentBoss.health }}/{{ bossStore.currentBoss.maxHealth }}
+                <div class="text-center text-sm">
+                    {{ bossStore.currentBoss.health }}/{{ bossStore.currentBoss.maxHealth }}
+                </div>
+
+                <!-- Add victory message -->
+                <div v-if="showVictory" class="text-center mt-2 text-green-600 font-bold animate-bounce">
+                    Boss Defeated!
+                </div>
             </div>
 
             <!-- Player stats -->
@@ -106,10 +113,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, watch } from 'vue'
+import { computed, onUnmounted, watch, ref } from 'vue'
 import { useBossStore } from '../stores/bossStore'
 
 const bossStore = useBossStore()
+const showVictory = ref(false)
 
 // Initialize first boss if none exists and combat is possible
 if (!bossStore.currentBoss && bossStore.canFight) {
@@ -129,6 +137,17 @@ watch(
         }
     }
 )
+
+// Watch for boss defeat
+watch(() => bossStore.currentBoss?.health, (newHealth, oldHealth) => {
+    if (newHealth === 0 && oldHealth && oldHealth > 0) {
+        showVictory.value = true
+        // Hide victory message after a delay
+        setTimeout(() => {
+            showVictory.value = false
+        }, 1000)
+    }
+})
 
 const playerStats = computed(() => bossStore.calculatePlayerStats())
 

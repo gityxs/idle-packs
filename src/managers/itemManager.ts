@@ -66,6 +66,11 @@ export class ItemManager {
       rarity: 'common',
       coinsPerMinute: 12, // 0.2 * 60
       types: ['morty'],
+      combatStats: {
+        attack: 5,
+        defense: 2,
+        health: 10,
+      },
     })
 
     this.registerItem({
@@ -84,6 +89,11 @@ export class ItemManager {
       rarity: 'common',
       coinsPerMinute: 18, // 0.3 * 60
       types: ['rick'],
+      combatStats: {
+        attack: 12,
+        defense: 3,
+        health: 15,
+      },
     })
 
     this.registerItem({
@@ -107,6 +117,11 @@ export class ItemManager {
       rarity: 'uncommon',
       coinsPerMinute: 60, // 1.0 * 60
       types: ['rick'],
+      combatStats: {
+        attack: 20,
+        defense: 8,
+        health: 30,
+      },
     })
 
     this.registerItem({
@@ -139,6 +154,11 @@ export class ItemManager {
       rarity: 'rare',
       coinsPerMinute: 300, // 5 * 60
       types: ['rick'],
+      combatStats: {
+        attack: 45,
+        defense: 20,
+        health: 60,
+      },
     })
 
     this.registerItem({
@@ -185,6 +205,11 @@ export class ItemManager {
       rarity: 'common',
       coinsPerMinute: 20,
       types: ['fakemon'],
+      combatStats: {
+        attack: 8,
+        defense: 4,
+        health: 12,
+      },
     })
 
     this.registerItem({
@@ -481,6 +506,11 @@ export class ItemManager {
       rarity: 'rare',
       coinsPerMinute: 4300,
       types: ['mythical'],
+      combatStats: {
+        attack: 100,
+        defense: 50,
+        health: 100,
+      },
     })
 
     this.registerItem({
@@ -715,6 +745,11 @@ export class ItemManager {
       rarity: 'epic',
       coinsPerMinute: 30000,
       types: ['ancient'],
+      combatStats: {
+        attack: 450,
+        defense: 200,
+        health: 800,
+      },
     })
 
     this.registerItem({
@@ -777,6 +812,168 @@ export class ItemManager {
       rarity: 'epic',
       coinsPerMinute: 18000,
       types: ['ancient'],
+    })
+
+    this.registerItem({
+      id: 'quantum-processor',
+      name: 'Quantum Neural Processor',
+      value: 25000,
+      rarity: 'rare',
+      coinsPerMinute: 8000,
+      types: ['ancient', 'mystical'],
+      combatStats: {
+        attack: 150,
+        defense: 80,
+        health: 200,
+      },
+    })
+
+    this.registerItem({
+      id: 'holographic-relic',
+      name: 'Holographic Temple Relic',
+      value: 18000,
+      rarity: 'uncommon',
+      coinsPerMinute: 6000,
+      types: ['ancient', 'mystical'],
+      combatStats: {
+        attack: 120,
+        defense: 60,
+        health: 150,
+      },
+    })
+
+    this.registerItem({
+      id: 'nano-scarab',
+      name: 'Nano-Tech Scarab',
+      value: 45000,
+      rarity: 'epic',
+      coinsPerMinute: 12000,
+      types: ['ancient', 'colony'],
+      combatStats: {
+        attack: 200,
+        defense: 100,
+        health: 250,
+      },
+      synergyEffect: {
+        type: 'combat',
+        bonus: 0.25,
+        condition: {
+          type: 'itemType',
+          value: ['ancient', 'colony'],
+          minCount: 2,
+        },
+      },
+    })
+
+    this.registerItem({
+      id: 'digital-ankh',
+      name: 'Digital Ankh of Immortality',
+      value: 80000,
+      rarity: 'legendary',
+      coinsPerMinute: 20000,
+      types: ['ancient', 'mystical'],
+      combatStats: {
+        attack: 300,
+        defense: 150,
+        health: 400,
+      },
+    })
+
+    this.registerItem({
+      id: 'cyber-sphinx',
+      name: 'Cyber-Sphinx Core',
+      value: 35000,
+      rarity: 'epic',
+      coinsPerMinute: 10000,
+      types: ['ancient', 'mystical'],
+      combatStats: {
+        attack: 180,
+        defense: 90,
+        health: 220,
+      },
+    })
+
+    this.registerItem({
+      id: 'matrix-tablet',
+      name: 'Matrix Tablet',
+      value: 15000,
+      rarity: 'uncommon',
+      coinsPerMinute: 5000,
+      types: ['ancient'],
+      synergyEffect: {
+        type: 'coinGen',
+        bonus: 0.2,
+        condition: {
+          type: 'itemType',
+          value: ['ancient', 'mystical'],
+          minCount: 3,
+        },
+      },
+    })
+
+    this.registerItem({
+      id: 'virtual-mummy',
+      name: 'Virtual Mummy Guardian',
+      value: 55000,
+      rarity: 'epic',
+      coinsPerMinute: 15000,
+      types: ['ancient', 'mystical'],
+      combatStats: {
+        attack: 250,
+        defense: 120,
+        health: 300,
+      },
+    })
+
+    this.registerItem({
+      id: 'data-hieroglyph',
+      name: 'Data Hieroglyph Crystal',
+      value: 12000,
+      rarity: 'common',
+      coinsPerMinute: 4000,
+      types: ['ancient'],
+      combatStats: {
+        attack: 100,
+        defense: 50,
+        health: 120,
+      },
+    })
+
+    this.registerItem({
+      id: 'techno-pharaoh',
+      name: "Techno-Pharaoh's Crown",
+      value: 100000,
+      rarity: 'legendary',
+      coinsPerMinute: 25000,
+      types: ['ancient', 'mystical'],
+      combatStats: {
+        attack: 350,
+        defense: 200,
+        health: 500,
+      },
+      synergyEffect: {
+        type: 'combat',
+        bonus: 0.3,
+        condition: {
+          type: 'itemType',
+          value: ['ancient'],
+          minCount: 4,
+        },
+      },
+    })
+
+    this.registerItem({
+      id: 'binary-obelisk',
+      name: 'Binary Obelisk Shard',
+      value: 22000,
+      rarity: 'rare',
+      coinsPerMinute: 7000,
+      types: ['ancient'],
+      combatStats: {
+        attack: 140,
+        defense: 70,
+        health: 180,
+      },
     })
   }
 

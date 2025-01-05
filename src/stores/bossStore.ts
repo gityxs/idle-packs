@@ -131,8 +131,9 @@ export const useBossStore = defineStore('boss', {
 
       const playerStats = this.calculatePlayerStats()
 
+      // Boss attacks player
       const bossDamage = Math.max(1, this.currentBoss.attack - playerStats.defense)
-      this.currentPlayerHealth -= bossDamage
+      this.currentPlayerHealth = Math.max(0, this.currentPlayerHealth - bossDamage)
 
       if (this.currentPlayerHealth <= 0) {
         this.stopFighting()
@@ -140,8 +141,9 @@ export const useBossStore = defineStore('boss', {
         return
       }
 
+      // Player attacks boss
       const playerDamage = Math.max(1, playerStats.attack - this.currentBoss.defense)
-      this.currentBoss.health -= playerDamage
+      this.currentBoss.health = Math.max(0, this.currentBoss.health - playerDamage)
 
       if (this.currentBoss.health <= 0) {
         const store = useStore()
@@ -156,8 +158,11 @@ export const useBossStore = defineStore('boss', {
           this.selectedBossLevel++
         }
 
-        this.generateBoss(this.selectedBossLevel)
-        this.resetHealth()
+        // Add delay before generating new boss
+        setTimeout(() => {
+          this.generateBoss(this.selectedBossLevel)
+          this.resetHealth()
+        }, 500)
       }
     },
 

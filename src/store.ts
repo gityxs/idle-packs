@@ -2,8 +2,8 @@ import { acceptHMRUpdate, defineStore } from 'pinia'
 import BigNumber from 'bignumber.js'
 import { itemManager, type ItemDefinition, type ItemDrop, type ItemWithCombatStats } from './managers/itemManager'
 import { achievementManager } from './managers/achievementManager'
-import { collectionManager } from './managers/collectionManager'
-import { useBossStore } from './stores/bossStore'
+import { collectionManager, type CollectionEntry } from './managers/collectionManager'
+import { useBossStore, type BossSaveData } from './stores/bossStore'
 
 export type Store = ReturnType<typeof useStore>
 
@@ -250,6 +250,37 @@ export const useStore = defineStore('main', {
         hasAutoBuyer: false,
         autoBuyEnabled: false,
       },
+      {
+        id: 'cyber-template-pack',
+        name: 'Cyber Temple Pack',
+        price: 1_000_000,
+        minItems: 1,
+        maxItems: 3,
+        possibleItems: [
+          // Common (10-15%)
+          { itemId: 'data-hieroglyph', dropChance: 15 },
+
+          // Uncommon (7-10%)
+          { itemId: 'matrix-tablet', dropChance: 10 },
+          { itemId: 'holographic-relic', dropChance: 8 },
+
+          // Rare (4-6%)
+          { itemId: 'quantum-processor', dropChance: 6 },
+          { itemId: 'binary-obelisk', dropChance: 5 },
+
+          // Epic (2-3%)
+          { itemId: 'nano-scarab', dropChance: 3 },
+          { itemId: 'cyber-sphinx', dropChance: 3 },
+          { itemId: 'virtual-mummy', dropChance: 2 },
+
+          // Legendary (0.5-1%)
+          { itemId: 'digital-ankh', dropChance: 1 },
+          { itemId: 'techno-pharaoh', dropChance: 0.5 },
+        ],
+        purchaseLimit: { amount: 3, minutes: 60, lastPurchaseTime: 0, remainingPurchases: 3 },
+        hasAutoBuyer: false,
+        autoBuyEnabled: false,
+      },
     ] as Pack[],
 
     settings: {
@@ -434,6 +465,40 @@ export const useStore = defineStore('main', {
         maxLevel: 1,
         type: 'autoBuy',
         packId: 'ancient-civilization-pack',
+      },
+      {
+        id: 'cyber-pack-limit',
+        name: 'Cyber Pack Capacity',
+        description: 'Increase purchase limit of Cyber Temple Pack by 2',
+        basePrice: 500_000,
+        priceMultiplier: 1.5,
+        level: 0,
+        type: 'packLimit',
+        packId: 'cyber-template-pack',
+        increaseAmount: 2,
+      },
+      {
+        id: 'cyber-pack-timer',
+        name: 'Cyber Pack Efficiency',
+        description: 'Reduce Cyber Temple Pack reset time by 10%',
+        basePrice: 2_000_000,
+        priceMultiplier: 2,
+        level: 0,
+        maxLevel: 9,
+        type: 'packTimer',
+        packId: 'cyber-template-pack',
+        increaseAmount: 0.1,
+      },
+      {
+        id: 'cyber-pack-auto',
+        name: 'Cyber Pack Auto-Buyer',
+        description: 'Unlock automatic purchasing for Cyber Temple Pack',
+        basePrice: 10_000_000,
+        priceMultiplier: 1,
+        level: 0,
+        maxLevel: 1,
+        type: 'autoBuy',
+        packId: 'cyber-template-pack',
       },
     ] as Upgrade[],
 
@@ -671,11 +736,8 @@ export const useStore = defineStore('main', {
       }
 
       this.updateAchievements()
-
-      if (this.inventory.length > 0) {
-        this.hasPerformedFirstAction = true
-        this.saveToLocalStorage()
-      }
+      this.hasPerformedFirstAction = true
+      this.saveToLocalStorage()
     },
 
     equipItem(itemId: string) {
@@ -710,6 +772,9 @@ export const useStore = defineStore('main', {
           this.inventory.splice(index, 1)
         }
       }
+
+      this.hasPerformedFirstAction = true
+      this.saveToLocalStorage()
 
       return true
     },
