@@ -845,9 +845,9 @@ export class ItemManager {
     this.registerItem({
       id: 'nano-scarab',
       name: 'Nano-Tech Scarab',
-      value: 45000,
+      value: 450_000,
       rarity: 'epic',
-      coinsPerMinute: 12000,
+      coinsPerMinute: 120_000,
       types: ['ancient', 'colony'],
       combatStats: {
         attack: 200,
@@ -868,9 +868,9 @@ export class ItemManager {
     this.registerItem({
       id: 'digital-ankh',
       name: 'Digital Ankh of Immortality',
-      value: 80000,
+      value: 800_000,
       rarity: 'legendary',
-      coinsPerMinute: 20000,
+      coinsPerMinute: 200_000,
       types: ['ancient', 'mystical'],
       combatStats: {
         attack: 300,
@@ -882,9 +882,9 @@ export class ItemManager {
     this.registerItem({
       id: 'cyber-sphinx',
       name: 'Cyber-Sphinx Core',
-      value: 35000,
-      rarity: 'epic',
-      coinsPerMinute: 10000,
+      value: 350_000,
+      rarity: 'legendary',
+      coinsPerMinute: 100_000,
       types: ['ancient', 'mystical'],
       combatStats: {
         attack: 180,
@@ -896,9 +896,9 @@ export class ItemManager {
     this.registerItem({
       id: 'matrix-tablet',
       name: 'Matrix Tablet',
-      value: 15000,
+      value: 150_000,
       rarity: 'uncommon',
-      coinsPerMinute: 5000,
+      coinsPerMinute: 50_000,
       types: ['ancient'],
       synergyEffect: {
         type: 'coinGen',
@@ -914,9 +914,9 @@ export class ItemManager {
     this.registerItem({
       id: 'virtual-mummy',
       name: 'Virtual Mummy Guardian',
-      value: 55000,
-      rarity: 'epic',
-      coinsPerMinute: 15000,
+      value: 550_000,
+      rarity: 'legendary',
+      coinsPerMinute: 150_000,
       types: ['ancient', 'mystical'],
       combatStats: {
         attack: 250,
@@ -928,9 +928,9 @@ export class ItemManager {
     this.registerItem({
       id: 'data-hieroglyph',
       name: 'Data Hieroglyph Crystal',
-      value: 12000,
+      value: 120_000,
       rarity: 'common',
-      coinsPerMinute: 4000,
+      coinsPerMinute: 20_000,
       types: ['ancient'],
       combatStats: {
         attack: 100,
@@ -942,9 +942,9 @@ export class ItemManager {
     this.registerItem({
       id: 'techno-pharaoh',
       name: "Techno-Pharaoh's Crown",
-      value: 100000,
+      value: 500_000,
       rarity: 'legendary',
-      coinsPerMinute: 25000,
+      coinsPerMinute: 50_000,
       types: ['ancient', 'mystical'],
       combatStats: {
         attack: 350,
@@ -965,9 +965,9 @@ export class ItemManager {
     this.registerItem({
       id: 'binary-obelisk',
       name: 'Binary Obelisk Shard',
-      value: 22000,
+      value: 220_000,
       rarity: 'rare',
-      coinsPerMinute: 7000,
+      coinsPerMinute: 10_000,
       types: ['ancient'],
       combatStats: {
         attack: 140,

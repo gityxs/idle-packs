@@ -271,11 +271,11 @@ export const useStore = defineStore('main', {
           // Epic (2-3%)
           { itemId: 'nano-scarab', dropChance: 3 },
           { itemId: 'cyber-sphinx', dropChance: 3 },
-          { itemId: 'virtual-mummy', dropChance: 2 },
 
           // Legendary (0.5-1%)
-          { itemId: 'digital-ankh', dropChance: 1 },
+          { itemId: 'digital-ankh', dropChance: 0.1 },
           { itemId: 'techno-pharaoh', dropChance: 0.5 },
+          { itemId: 'virtual-mummy', dropChance: 0.4 },
         ],
         purchaseLimit: { amount: 3, minutes: 60, lastPurchaseTime: 0, remainingPurchases: 3 },
         hasAutoBuyer: false,
