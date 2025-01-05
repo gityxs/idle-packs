@@ -49,8 +49,12 @@ interface Upgrade {
   level: number
   maxLevel?: number
   type: 'packLimit' | 'packTimer' | 'storage' | 'equipmentSlot' | 'autoBuy'
-  packId: string
+  packId?: string
   increaseAmount?: number
+  requiresUpgrade?: {
+    id: string
+    level: number
+  }
 }
 
 interface SaveData {
@@ -938,7 +942,13 @@ export const useStore = defineStore('main', {
     },
 
     getUpgradeCost(upgrade: Upgrade): BigNumber {
-      return new BigNumber(upgrade.basePrice).times(new BigNumber(upgrade.priceMultiplier).pow(upgrade.level))
+      if (upgrade.maxLevel === 1) {
+        // For one-time purchases like instant reset upgrades
+        return new BigNumber(upgrade.basePrice)
+      }
+
+      // For upgrades with multiple levels
+      return new BigNumber(upgrade.basePrice).times(Math.pow(upgrade.priceMultiplier, upgrade.level))
     },
 
     applyUpgradeEffects(upgrade: Upgrade) {

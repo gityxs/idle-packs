@@ -55,7 +55,7 @@ export const useBossStore = defineStore('boss', {
         attack: attack,
         defense: defense,
         rewards: {
-          coins: Math.floor(50 * multiplier),
+          coins: Math.floor(50 * Math.pow(multiplier, 1.1)),
           experience: Math.floor(25 * Math.pow(level, 1.2)),
         },
       }

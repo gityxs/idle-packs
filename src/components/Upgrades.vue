@@ -59,7 +59,7 @@
                     </div>
                 </div>
 
-                <button @click="purchaseUpgrade(upgrade)" :disabled="!canPurchaseUpgrade(upgrade)" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 
+                <button @click="store.buyUpgrade(upgrade.id)" :disabled="!canPurchaseUpgrade(upgrade)" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 
                            disabled:hover:bg-blue-500">
                     Purchase
                 </button>
@@ -172,22 +172,5 @@ const canPurchaseUpgrade = (upgrade: Upgrade) => {
 
 const getUpgradeName = (upgradeId: string) => {
     return store.upgrades.find(u => u.id === upgradeId)?.name || upgradeId
-}
-
-const purchaseUpgrade = (upgrade: Upgrade) => {
-    if (!canPurchaseUpgrade(upgrade)) return
-
-    const price = store.getUpgradeCost(upgrade)
-    store.coins = store.coins.minus(price)
-    upgrade.level++
-
-    if (upgrade.type === 'packTimer' && upgrade.level === 1 && upgrade.id.includes('instant')) {
-        const pack = store.availablePacks.find(p => p.id === upgrade.packId)
-        if (pack?.purchaseLimit) {
-            pack.purchaseLimit.minutes = 0
-        }
-    }
-
-    store.saveToLocalStorage()
 }
 </script>

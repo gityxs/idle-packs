@@ -14,5 +14,12 @@ export interface Upgrade {
   description: string
   level: number
   maxLevel?: number
-  // Add other properties as needed
+  basePrice: number
+  priceMultiplier: number
+  type: 'packTimer' | 'general' | string
+  packId?: string
+  requiresUpgrade?: {
+    id: string
+    level: number
+  }
 }
