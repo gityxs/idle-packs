@@ -9,9 +9,8 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <!-- Equipment Slots -->
-            <div v-for="item in store.equippedItems" :key="item.id"
-                class="border-2 border-dashed p-4 rounded-lg min-h-[150px]" :class="{
+            <div v-for="item in store.equippedItems" :key="item.id" class="border-2 border-dashed p-4 rounded-lg"
+                :class="{
                     'border-gray-200': !item,
                     'border-gray-300': item?.rarity === 'common',
                     'border-green-400': item?.rarity === 'uncommon',
@@ -19,11 +18,21 @@
                     'border-purple-400': item?.rarity === 'epic',
                     'border-yellow-400': item?.rarity === 'legendary',
                 }">
-                <div v-if="item" class="space-y-2">
-                    <div>
+                <div v-if="item" class="flex flex-col h-full">
+                    <!-- Item Header (fixed height) -->
+                    <div class="flex justify-between items-start mb-2">
                         <h3 class="font-bold">{{ item.name }}</h3>
-                        <div class="flex flex-wrap items-center gap-2 mt-1">
-                            <p class="text-sm capitalize" :class="{
+                        <button @click="store.unequipItem(item.id)" class="text-red-500 hover:text-red-600">
+                            <span class="sr-only">Unequip</span>
+                            ×
+                        </button>
+                    </div>
+
+                    <!-- Main Content (flexible height) -->
+                    <div class="flex-grow space-y-2">
+                        <!-- Rarity and Types -->
+                        <div class="flex flex-wrap items-center gap-1 text-sm">
+                            <span class="capitalize" :class="{
                                 'text-gray-600': item.rarity === 'common',
                                 'text-green-600': item.rarity === 'uncommon',
                                 'text-blue-600': item.rarity === 'rare',
@@ -31,58 +40,60 @@
                                 'text-yellow-600': item.rarity === 'legendary',
                             }">
                                 {{ item.rarity }}
-                            </p>
-                            <!-- Add type chips -->
+                            </span>
                             <div class="flex flex-wrap gap-1">
-                                <TypeChip v-for="type in itemManager.getItem(item.id)?.types" :key="type"
-                                    :type="type" />
+                                <TypeChip v-for="type in itemManager.getItem(item.id)?.types" :key="type" :type="type"
+                                    size="sm" />
                             </div>
                         </div>
-                        <p class="text-green-600 mt-1">
+
+                        <!-- Production -->
+                        <p class="text-green-600 text-sm">
                             +{{ formatNumber(getItemProduction(item.id)) }}/min
                         </p>
+
+                        <!-- Combat Stats (if present) -->
+                        <div v-if="getItemCombatStats(item)" class="space-y-2">
+                            <!-- Stats Grid -->
+                            <div class="grid grid-cols-3 gap-1 text-xs bg-gray-50 rounded p-1">
+                                <div class="text-center">
+                                    <span class="font-bold text-red-600">{{ getItemCombatStats(item).attack }}</span>
+                                    <span class="text-gray-600"> ATK</span>
+                                </div>
+                                <div class="text-center">
+                                    <span class="font-bold text-blue-600">{{ getItemCombatStats(item).defense }}</span>
+                                    <span class="text-gray-600"> DEF</span>
+                                </div>
+                                <div class="text-center">
+                                    <span class="font-bold text-green-600">{{ getItemCombatStats(item).health }}</span>
+                                    <span class="text-gray-600"> HP</span>
+                                </div>
+                            </div>
+
+                            <!-- Level and XP -->
+                            <div class="text-center">
+                                <div class="text-xs">Level {{ getItemCombatStats(item).level }}</div>
+                                <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
+                                    <div class="bg-blue-500 rounded-full h-1 transition-all duration-200"
+                                        :style="{ width: `${(getItemCombatStats(item).experience / getItemCombatStats(item).requiredExperience) * 100}%` }">
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    {{ getItemCombatStats(item).experience }}/{{
+                                    getItemCombatStats(item).requiredExperience }}
+                                    XP
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <button @click="store.unequipItem(item.id)"
-                        class="w-full px-4 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition">
-                        Unequip
-                    </button>
+
+                    <!-- Synergy Info (always at bottom) -->
+                    <div class="mt-2">
+                        <SynergyInfo v-if="itemManager.getItem(item.id)" :item="itemManager.getItem(item.id)!" />
+                    </div>
                 </div>
                 <div v-else class="flex items-center justify-center h-[100px] text-gray-400">
                     Empty Slot
-                </div>
-
-                <!-- Add synergy info -->
-                <SynergyInfo v-if="itemManager.getItem(item.id)" :item="itemManager.getItem(item.id)!" />
-
-                <!-- Add combat stats -->
-                <div v-if="getItemCombatStats(item)" class="mt-1">
-                    <div class="grid grid-cols-3 gap-1 text-xs">
-                        <div class="text-center">
-                            <span class="font-bold text-red-600">{{ getItemCombatStats(item).attack }}</span>
-                            <span class="text-gray-600"> ATK</span>
-                        </div>
-                        <div class="text-center">
-                            <span class="font-bold text-blue-600">{{ getItemCombatStats(item).defense }}</span>
-                            <span class="text-gray-600"> DEF</span>
-                        </div>
-                        <div class="text-center">
-                            <span class="font-bold text-green-600">{{ getItemCombatStats(item).health }}</span>
-                            <span class="text-gray-600"> HP</span>
-                        </div>
-                    </div>
-                    <!-- Add level and experience bar -->
-                    <div class="mt-1">
-                        <div class="text-xs text-center">Level {{ getItemCombatStats(item).level }}</div>
-                        <div class="w-full bg-gray-200 rounded-full h-1 mt-1">
-                            <div class="bg-blue-500 rounded-full h-1 transition-all duration-200"
-                                :style="{ width: `${(getItemCombatStats(item).experience / getItemCombatStats(item).requiredExperience) * 100}%` }">
-                            </div>
-                        </div>
-                        <div class="text-xs text-center text-gray-600">
-                            {{ getItemCombatStats(item).experience }}/{{ getItemCombatStats(item).requiredExperience }}
-                            XP
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

@@ -226,80 +226,93 @@
 
         <!-- Update the inventory grid to use sorted items -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div v-for="item in sortedInventory" :key="item.id" class="border rounded-lg p-4" :class="{
+          <div v-for="item in sortedInventory" :key="item.id" class="border rounded-lg p-4 flex flex-col" :class="{
             'border-gray-300': item.rarity === 'common',
             'border-green-400': item.rarity === 'uncommon',
             'border-blue-400': item.rarity === 'rare',
             'border-purple-400': item.rarity === 'epic',
             'border-yellow-400': item.rarity === 'legendary',
           }">
+            <!-- Item Header -->
             <div class="flex justify-between items-start mb-2">
-              <div>
-                <h3 class="font-bold">{{ item.name }}</h3>
-                <div class="flex flex-wrap items-center gap-2 mt-1">
-                  <p class="text-sm capitalize" :class="{
-                    'text-gray-600': item.rarity === 'common',
-                    'text-green-600': item.rarity === 'uncommon',
-                    'text-blue-600': item.rarity === 'rare',
-                    'text-purple-600': item.rarity === 'epic',
-                    'text-yellow-600': item.rarity === 'legendary',
-                  }">
-                    {{ item.rarity }}
-                  </p>
-                  <div class="flex flex-wrap gap-1">
-                    <TypeChip v-for="type in itemManager.getItem(item.id)?.types" :key="type" :type="type" />
+              <h3 class="font-bold">{{ item.name }}</h3>
+              <div class="text-right text-sm">
+                <div>Amount: {{ item.amount }}</div>
+                <div>Value: {{ formatNumber(item.value) }}</div>
+              </div>
+            </div>
+
+            <!-- Item Info -->
+            <div class="space-y-2 flex-grow">
+              <!-- Rarity and Types -->
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm capitalize" :class="{
+                  'text-gray-600': item.rarity === 'common',
+                  'text-green-600': item.rarity === 'uncommon',
+                  'text-blue-600': item.rarity === 'rare',
+                  'text-purple-600': item.rarity === 'epic',
+                  'text-yellow-600': item.rarity === 'legendary',
+                }">
+                  {{ item.rarity }}
+                </span>
+                <div class="flex flex-wrap gap-1">
+                  <TypeChip v-for="type in itemManager.getItem(item.id)?.types" :key="type" :type="type" />
+                </div>
+                <span class="text-sm text-gray-500">• {{ getItemSlot(item.id) }}</span>
+              </div>
+
+              <!-- Combat Stats -->
+              <div v-if="itemManager.getItem(item.id)?.combatStats"
+                class="grid grid-cols-3 gap-2 p-2 bg-gray-50 rounded text-sm">
+                <div class="text-center">
+                  <div class="font-bold text-red-600">
+                    {{ itemManager.getItem(item.id)?.combatStats?.attack }}
                   </div>
-                  <span class="text-sm text-gray-500">
-                    • {{ getItemSlot(item.id) }}
-                  </span>
+                  <div class="text-xs text-gray-600">Attack</div>
+                </div>
+                <div class="text-center">
+                  <div class="font-bold text-blue-600">
+                    {{ itemManager.getItem(item.id)?.combatStats?.defense }}
+                  </div>
+                  <div class="text-xs text-gray-600">Defense</div>
+                </div>
+                <div class="text-center">
+                  <div class="font-bold text-green-600">
+                    {{ itemManager.getItem(item.id)?.combatStats?.health }}
+                  </div>
+                  <div class="text-xs text-gray-600">Health</div>
                 </div>
               </div>
-              <div class="text-right">
-                <p>Amount: {{ item.amount }}</p>
-                <p>Value: {{ formatNumber(item.value) }} coins</p>
+
+              <!-- Production -->
+              <div class="text-green-600 text-sm">
+                +{{ formatNumber(getItemProduction(item.id)) }}/min
               </div>
+
+              <!-- Synergy Info -->
+              <SynergyInfo v-if="itemManager.getItem(item.id)" :item="itemManager.getItem(item.id)!" />
             </div>
 
-            <!-- Add combat stats display -->
-            <div v-if="itemManager.getItem(item.id)?.combatStats"
-              class="mb-2 grid grid-cols-3 gap-2 p-2 bg-gray-50 rounded">
-              <div class="text-center">
-                <div class="font-bold text-red-600">{{ itemManager.getItem(item.id)?.combatStats?.attack }}</div>
-                <div class="text-xs text-gray-600">Attack</div>
+            <!-- Actions -->
+            <div class="mt-4 space-y-2">
+              <div class="flex gap-2">
+                <button @click="store.sellItem(item.id, 1)"
+                  class="flex-1 px-3 py-1.5 bg-red-500 text-white text-sm rounded hover:bg-red-600">
+                  Sell 1
+                </button>
+                <button v-if="item.amount > 1" @click="store.sellItem(item.id, item.amount)"
+                  class="flex-1 px-3 py-1.5 bg-red-700 text-white text-sm rounded hover:bg-red-800">
+                  Sell All
+                </button>
+                <button @click="store.equipItem(item.id)"
+                  :disabled="store.equippedItems.length >= store.maxEquippedItems" class="flex-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 
+                                 disabled:opacity-50 disabled:hover:bg-blue-500">
+                  {{ store.equippedItems.length >= store.maxEquippedItems ? 'No Slots' : 'Equip' }}
+                </button>
               </div>
-              <div class="text-center">
-                <div class="font-bold text-blue-600">{{ itemManager.getItem(item.id)?.combatStats?.defense }}</div>
-                <div class="text-xs text-gray-600">Defense</div>
-              </div>
-              <div class="text-center">
-                <div class="font-bold text-green-600">{{ itemManager.getItem(item.id)?.combatStats?.health }}</div>
-                <div class="text-xs text-gray-600">Health</div>
-              </div>
-            </div>
 
-            <p class="text-green-600 mb-2">+{{ formatNumber(getItemProduction(item.id)) }}/min</p>
-
-            <div class="flex gap-2">
-              <button @click="store.sellItem(item.id, 1)"
-                class="flex-1 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                Sell 1
-              </button>
-              <button v-if="item.amount > 1" @click="store.sellItem(item.id, item.amount)"
-                class="flex-1 px-4 py-2 bg-red-700 text-white rounded hover:bg-red-700">
-                Sell All
-              </button>
-              <button @click="store.equipItem(item.id)" :disabled="store.equippedItems.length >= store.maxEquippedItems"
-                class="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-blue-500">
-                {{ store.equippedItems.length >= store.maxEquippedItems ? 'No Slots' : 'Equip' }}
-              </button>
-            </div>
-
-            <!-- Add synergy info -->
-            <SynergyInfo v-if="itemManager.getItem(item.id)" :item="itemManager.getItem(item.id)!" />
-
-            <!-- Add lock checkbox -->
-            <div class="flex justify-end items-center gap-2 mt-2 pt-2 border-t border-gray-100">
-              <label class="flex items-center gap-2 cursor-pointer select-none">
+              <!-- Lock Toggle -->
+              <label class="flex items-center justify-end gap-2 cursor-pointer select-none">
                 <input type="checkbox" :checked="item.locked" @change="store.toggleItemLock(item.id)"
                   class="w-4 h-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500">
                 <span class="text-sm text-gray-600">Lock Item</span>
