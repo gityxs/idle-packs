@@ -304,10 +304,15 @@
                   class="flex-1 px-3 py-1.5 bg-red-700 text-white text-sm rounded hover:bg-red-800">
                   Sell All
                 </button>
-                <button @click="store.equipItem(item.id)"
-                  :disabled="store.equippedItems.length >= store.maxEquippedItems" class="flex-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 
-                                 disabled:opacity-50 disabled:hover:bg-blue-500">
-                  {{ store.equippedItems.length >= store.maxEquippedItems ? 'No Slots' : 'Equip' }}
+                <button @click="store.equipItem(item.id)" :disabled="store.equippedItems.length >= store.maxEquippedItems ||
+                  store.equippedItems.some(equipped => equipped.id === item.id)" class="flex-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 
+                         disabled:opacity-50 disabled:hover:bg-blue-500">
+                  {{ store.equippedItems.length >= store.maxEquippedItems
+                    ? 'No Slots'
+                    : store.equippedItems.some(equipped => equipped.id === item.id)
+                      ? 'Already Equipped'
+                      : 'Equip'
+                  }}
                 </button>
               </div>
 

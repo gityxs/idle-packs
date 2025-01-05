@@ -678,26 +678,38 @@ export const useStore = defineStore('main', {
       }
     },
 
-    equipItem(itemId: string): boolean {
-      const item = this.inventory.find(i => i.id === itemId)
-      if (!item || item.amount < 1) return false
+    equipItem(itemId: string) {
+      // Check if item exists in inventory
+      const inventoryItem = this.inventory.find(item => item.id === itemId)
+      if (!inventoryItem) return false
 
-      // Check if we have room for more items
+      // Check if we have available slots
       if (this.equippedItems.length >= this.maxEquippedItems) return false
 
-      // Remove from inventory
-      item.amount--
-      if (item.amount <= 0) {
-        const index = this.inventory.indexOf(item)
-        this.inventory.splice(index, 1)
+      // Check if item is already equipped
+      if (this.equippedItems.some(item => item.id === itemId)) {
+        // Could optionally show a notification/message here
+        console.log('This item is already equipped')
+        return false
+      }
+
+      // Create a new equipped item
+      const equippedItem = {
+        ...inventoryItem,
+        amount: 1,
       }
 
       // Add to equipped items
-      this.equippedItems.push({ ...item, amount: 1 })
+      this.equippedItems.push(equippedItem)
 
-      this.hasPerformedFirstAction = true
-
-      this.saveToLocalStorage()
+      // Remove one from inventory
+      inventoryItem.amount--
+      if (inventoryItem.amount <= 0) {
+        const index = this.inventory.findIndex(item => item.id === itemId)
+        if (index !== -1) {
+          this.inventory.splice(index, 1)
+        }
+      }
 
       return true
     },
