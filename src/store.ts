@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import BigNumber from 'bignumber.js'
-import { itemManager, type ItemDefinition, type ItemDrop } from './managers/itemManager'
+import { itemManager, type ItemDefinition, type ItemDrop, type ItemWithCombatStats } from './managers/itemManager'
 import { achievementManager } from './managers/achievementManager'
 import { collectionManager } from './managers/collectionManager'
 import { useBossStore } from './stores/bossStore'

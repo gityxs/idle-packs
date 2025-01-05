@@ -457,7 +457,12 @@ export class ItemManager {
       value: 3500,
       rarity: 'epic',
       coinsPerMinute: 4500,
-      types: ['mythical'],
+      types: ['mythical', 'colony'],
+      combatStats: {
+        attack: 500,
+        defense: 100,
+        health: 1000,
+      },
     })
 
     this.registerItem({

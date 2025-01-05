@@ -208,19 +208,34 @@
         <!-- Add sorting controls above the inventory grid -->
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl sm:text-2xl">Inventory</h2>
-          <div class="flex items-center gap-2">
-            <label class="text-sm text-gray-600">Sort by:</label>
-            <select v-model="inventorySort" class="px-2 py-1 border rounded text-sm bg-white">
-              <option value="rarity">Rarity</option>
-              <option value="production">Production</option>
-              <option value="value">Value</option>
-            </select>
-            <button @click="inventorySortDir = inventorySortDir === 'asc' ? 'desc' : 'asc'"
-              class="p-1 rounded hover:bg-gray-100">
-              <span class="text-gray-600">
-                {{ inventorySortDir === 'asc' ? '↑' : '↓' }}
-              </span>
-            </button>
+          <div class="flex items-center gap-4">
+            <!-- Type Filter -->
+            <div class="flex items-center gap-2">
+              <label class="text-sm text-gray-600">Filter:</label>
+              <select v-model="inventoryFilter" class="px-2 py-1 border rounded text-sm bg-white">
+                <option value="all">All Types</option>
+                <option value="combat">Combat Items</option>
+                <option v-for="type in availableTypes" :key="type" :value="type">
+                  {{ type.charAt(0).toUpperCase() + type.slice(1) }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Existing Sort Controls -->
+            <div class="flex items-center gap-2">
+              <label class="text-sm text-gray-600">Sort by:</label>
+              <select v-model="inventorySort" class="px-2 py-1 border rounded text-sm bg-white">
+                <option value="rarity">Rarity</option>
+                <option value="production">Production</option>
+                <option value="value">Value</option>
+              </select>
+              <button @click="inventorySortDir = inventorySortDir === 'asc' ? 'desc' : 'asc'"
+                class="p-1 rounded hover:bg-gray-100">
+                <span class="text-gray-600">
+                  {{ inventorySortDir === 'asc' ? '↑' : '↓' }}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -560,14 +575,27 @@ const rarityOrder = {
 }
 
 const sortedInventory = computed(() => {
-  const items = [...store.inventory]
+  let items = [...store.inventory]
 
+  // Apply filter first
+  if (inventoryFilter.value !== 'all') {
+    items = items.filter(item => {
+      const definition = itemManager.getItem(item.id)
+      if (inventoryFilter.value === 'combat') {
+        return definition?.combatStats !== undefined
+      }
+      return definition?.types?.includes(inventoryFilter.value as ItemType)
+    })
+  }
+
+  // Then apply sort
   items.sort((a, b) => {
     let comparison = 0
 
     switch (inventorySort.value) {
       case 'rarity':
-        comparison = rarityOrder[b.rarity] - rarityOrder[a.rarity]
+        const rarityOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary']
+        comparison = rarityOrder.indexOf(b.rarity) - rarityOrder.indexOf(a.rarity)
         break
 
       case 'production':
@@ -592,4 +620,16 @@ const selectedPack = ref(null)
 
 const lockedItemsCount = computed(() => store.inventory.filter(i => i.locked).length)
 const unlockedItemsCount = computed(() => store.inventory.length - lockedItemsCount.value)
+
+const inventoryFilter = ref('all')
+
+// Get all available item types
+const availableTypes = computed(() => {
+  const types = new Set<string>()
+  store.inventory.forEach(item => {
+    const definition = itemManager.getItem(item.id)
+    definition?.types?.forEach(type => types.add(type))
+  })
+  return Array.from(types).sort()
+})
 </script>
