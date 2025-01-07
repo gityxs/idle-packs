@@ -48,7 +48,7 @@ interface Upgrade {
   priceMultiplier: number
   level: number
   maxLevel?: number
-  type: 'packLimit' | 'packTimer' | 'storage' | 'equipmentSlot' | 'autoBuy'
+  type: 'packLimit' | 'packTimer' | 'storage' | 'equipmentSlot' | 'autoBuy' | 'autoOpener'
   packId?: string
   increaseAmount?: number
   requiresUpgrade?: {
@@ -81,6 +81,8 @@ interface SaveData {
 
 export interface State {
   highestBossDefeated: number
+  autoOpenerIntervals: { [key: string]: number }
+  lastAutoOpen: { [key: string]: number }
 }
 
 export const useStore = defineStore('main', {
@@ -593,6 +595,50 @@ export const useStore = defineStore('main', {
           level: 9,
         },
       },
+      {
+        id: 'morty-auto-opener',
+        name: 'Morty Pack Auto Opener',
+        description: 'Automatically opens Morty Packs every few seconds',
+        level: 0,
+        maxLevel: 5,
+        basePrice: 1000000, // 1 million
+        priceMultiplier: 5,
+        type: 'autoOpener',
+        packId: 'morty',
+      },
+      {
+        id: 'ancient-auto-opener',
+        name: 'Ancient Pack Auto Opener',
+        description: 'Automatically opens Ancient Packs every few seconds',
+        level: 0,
+        maxLevel: 5,
+        basePrice: 5000000, // 5 million
+        priceMultiplier: 5,
+        type: 'autoOpener',
+        packId: 'ancient',
+      },
+      {
+        id: 'cyber-auto-opener',
+        name: 'Cyber Pack Auto Opener',
+        description: 'Automatically opens Cyber Packs every few seconds',
+        level: 0,
+        maxLevel: 5,
+        basePrice: 25000000, // 25 million
+        priceMultiplier: 5,
+        type: 'autoOpener',
+        packId: 'cyber',
+      },
+      {
+        id: 'fakemon-auto-opener',
+        name: 'Fakemon Pack Auto Opener',
+        description: 'Automatically opens Fakemon Packs every few seconds',
+        level: 0,
+        maxLevel: 5,
+        basePrice: 100000000, // 100 million
+        priceMultiplier: 5,
+        type: 'autoOpener',
+        packId: 'fakemon',
+      },
     ] as Upgrade[],
 
     discoveredItems: new Set<string>(),
@@ -610,6 +656,9 @@ export const useStore = defineStore('main', {
     hasOpenedFirstPack: false,
 
     highestBossDefeated: 0,
+
+    autoOpenerIntervals: {},
+    lastAutoOpen: {},
   }),
 
   actions: {
@@ -952,6 +1001,9 @@ export const useStore = defineStore('main', {
     },
 
     applyUpgradeEffects(upgrade: Upgrade) {
+      if (upgrade.type === 'autoOpener' && upgrade.packId) {
+        this.startAutoOpener(upgrade.packId)
+      }
       switch (upgrade.type) {
         case 'storage':
           this.maxPackStorage += upgrade.increaseAmount || 0
@@ -1410,6 +1462,66 @@ export const useStore = defineStore('main', {
         this.highestBossDefeated = bossId
       }
     },
+
+    startAutoOpener(packId: string) {
+      const upgrade = this.upgrades.find(u => u.type === 'autoOpener' && u.packId === packId)
+      if (!upgrade || upgrade.level === 0) return
+
+      // Clear existing interval if any
+      if (this.autoOpenerIntervals[packId]) {
+        clearInterval(this.autoOpenerIntervals[packId])
+      }
+
+      // Calculate interval based on upgrade level (faster at higher levels)
+      // Level 1: 10 seconds, Level 5: 2 seconds
+      const interval = Math.max(2000, 10000 - (upgrade.level - 1) * 2000)
+
+      this.autoOpenerIntervals[packId] = setInterval(() => {
+        const now = Date.now()
+        const pack = this.availablePacks.find(p => p.id === packId)
+
+        // Check if pack exists and if we can open it
+        if (!pack || !this.canOpenPack(pack)) return
+
+        // Check if enough time has passed since last purchase
+        if (pack.purchaseLimit && pack.purchaseLimit.minutes > 0) {
+          const lastOpen = this.lastAutoOpen[packId] || 0
+          if (now - lastOpen < pack.purchaseLimit.minutes * 60 * 1000) return
+        }
+
+        // Open the pack silently (without modal)
+        this.openPackSilently(pack)
+        this.lastAutoOpen[packId] = now
+      }, interval)
+    },
+
+    openPackSilently(pack: Pack) {
+      const items = this.generatePackItems(pack)
+      items.forEach(item => {
+        const existingItem = this.inventory.find(i => i.id === item.id)
+        if (existingItem) {
+          existingItem.amount += item.amount
+        } else {
+          this.inventory.push(item)
+        }
+      })
+      this.saveToLocalStorage()
+    },
+
+    stopAutoOpener(packId: string) {
+      if (this.autoOpenerIntervals[packId]) {
+        clearInterval(this.autoOpenerIntervals[packId])
+        delete this.autoOpenerIntervals[packId]
+      }
+    },
+
+    initAutoOpeners() {
+      this.upgrades
+        .filter(u => u.type === 'autoOpener' && u.level > 0)
+        .forEach(u => {
+          if (u.packId) this.startAutoOpener(u.packId)
+        })
+    },
   },
 
   getters: {
@@ -1473,6 +1585,11 @@ export const useStore = defineStore('main', {
     packStorageRemaining(): number {
       return this.maxPackStorage - this.packStorageUsed
     },
+  },
+
+  onUnmounted() {
+    // Clear all auto-opener intervals
+    Object.values(this.autoOpenerIntervals).forEach(interval => clearInterval(interval))
   },
 })
 

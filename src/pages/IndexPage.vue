@@ -1,28 +1,28 @@
 <template>
-  <div class="flex flex-col items-center min-h-screen p-4 gap-6">
+  <div class="flex flex-col items-center min-h-screen gap-6 p-4 dark:bg-gray-900 dark:text-gray-100">
     <header class="w-full max-w-4xl mb-6">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+      <div class="flex flex-col items-start justify-between mb-4 sm:flex-row sm:items-center">
         <div>
-          <h1 class="text-2xl sm:text-3xl font-bold mb-2">Idle Pack Opening Game</h1>
-          <div class="text-lg sm:text-xl">
+          <h1 class="mb-2 text-2xl font-bold sm:text-3xl dark:text-white">Idle Pack Opening Game</h1>
+          <div class="text-lg sm:text-xl dark:text-gray-300">
             Coins: {{ store.formattedCoins }}
           </div>
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-3 sm:flex-row sm:gap-4 sm:items-center sm:justify-between">
         <SaveLoadMenu />
 
         <div class="flex gap-3">
           <button v-if="store.inventory.length > 0" @click="sellAllItems"
-            class="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center gap-2">
+            class="flex items-center justify-center w-full gap-2 px-4 py-2 text-white bg-red-500 rounded-lg sm:w-auto hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700">
             <span>
               Sell All{{ lockedItemsCount ? ` (${unlockedItemsCount}/${store.inventory.length})` : '' }}
               ({{ formatNumber(totalInventoryValue) }})
             </span>
           </button>
 
-          <label class="flex items-center gap-2 cursor-pointer">
+          <label class="flex items-center gap-2 cursor-pointer dark:text-gray-300">
             <input type="checkbox" :checked="store.settings.showAnimations" @change="store.toggleAnimations"
               class="w-4 h-4">
             <span class="text-sm">Show Animations</span>
@@ -34,57 +34,57 @@
     <!-- Game Content -->
     <div class="w-full max-w-4xl p-4">
       <!-- Tabs -->
-      <div class="border-b border-gray-200 mb-6 overflow-x-auto">
+      <div class="mb-6 overflow-x-auto border-b border-gray-200 dark:border-gray-700">
         <nav class="flex gap-4 min-w-max">
-          <button @click="activeTab = 'packs'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+          <button @click="activeTab = 'packs'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'packs'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]">
             Packs
           </button>
-          <button @click="activeTab = 'inventory'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+          <button @click="activeTab = 'inventory'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'inventory'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]">
             Inventory
           </button>
-          <button @click="activeTab = 'upgrades'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+          <button @click="activeTab = 'upgrades'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'upgrades'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]">
             Upgrades
           </button>
-          <button @click="activeTab = 'bosses'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+          <button @click="activeTab = 'bosses'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'bosses'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]">
             Boss Fights
           </button>
-          <button @click="activeTab = 'collection'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+          <button @click="activeTab = 'collection'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'collection'
-              ? 'border-b-2 border-blue-500 text-blue-600'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
               : store.hasOpenedFirstPack
-                ? 'text-gray-500 hover:text-gray-700'
-                : 'text-gray-300 cursor-not-allowed'
+                ? 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                : 'text-gray-300 cursor-not-allowed dark:text-gray-600 dark:hover:text-gray-200'
           ]" :disabled="!store.hasOpenedFirstPack">
             Collection
-            <span v-if="!store.hasOpenedFirstPack" class="text-xs ml-1">(Open a pack first)</span>
+            <span v-if="!store.hasOpenedFirstPack" class="ml-1 text-xs">(Open a pack first)</span>
           </button>
-          <button @click="activeTab = 'achievements'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+          <button @click="activeTab = 'achievements'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'achievements'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]">
             Achievements
           </button>
-          <button @click="activeTab = 'settings'" class="py-2 px-1 -mb-px whitespace-nowrap" :class="[
+          <button @click="activeTab = 'settings'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'settings'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]">
             Settings
           </button>
@@ -95,10 +95,10 @@
       <div v-if="activeTab === 'packs'" class="grid grid-cols-1 gap-6">
         <!-- Left Column: Shop -->
         <div>
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl sm:text-2xl">Shop</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl sm:text-2xl dark:text-white">Shop</h2>
             <div v-if="store.hasAutoBuyer" class="flex items-center gap-2">
-              <label class="flex items-center gap-2 cursor-pointer">
+              <label class="flex items-center gap-2 cursor-pointer dark:text-gray-300">
                 <input type="checkbox" :checked="store.settings.autoBuyPacks" @change="store.toggleAutoBuy()"
                   class="w-4 h-4">
                 <span class="text-sm">Auto Buy Packs</span>
@@ -106,10 +106,11 @@
             </div>
           </div>
           <div class="grid gap-4">
-            <div v-for="pack in store.availablePacks" :key="pack.id" class="border p-4 rounded-lg min-w-[200px]">
-              <div class="flex justify-between items-start mb-2">
+            <div v-for="pack in store.availablePacks" :key="pack.id"
+              class="border p-4 rounded-lg min-w-[200px] dark:border-gray-700 dark:bg-gray-800">
+              <div class="flex items-start justify-between mb-2">
                 <h3 class="font-bold">{{ pack.name }}</h3>
-                <button @click="selectedPack = pack" class="text-blue-500 hover:text-blue-600 text-sm underline">
+                <button @click="selectedPack = pack" class="text-sm text-blue-500 underline hover:text-blue-600">
                   Details
                 </button>
               </div>
@@ -128,8 +129,8 @@
               </div>
 
               <!-- Add auto-buy toggle -->
-              <div v-if="pack.hasAutoBuyer" class="mt-2 flex items-center gap-2">
-                <label class="flex items-center gap-2 cursor-pointer" @click.stop>
+              <div v-if="pack.hasAutoBuyer" class="flex items-center gap-2 mt-2">
+                <label class="flex items-center gap-2 cursor-pointer dark:text-gray-300" @click.stop>
                   <input type="checkbox" :checked="pack.autoBuyEnabled" @change="store.toggleAutoBuy(pack.id)"
                     class="w-4 h-4">
                   <span class="text-sm">Auto Buy</span>
@@ -139,25 +140,26 @@
               <!-- Add buy controls -->
               <div class="flex items-center gap-2 mt-2">
                 <input type="number" v-model="buyAmounts[pack.id]" min="1" :max="store.getMaxBuyable(pack.id)"
-                  class="w-20 px-2 py-1 border rounded" @click.stop>
-                <div class="flex-1 flex gap-1">
+                  class="w-20 px-2 py-1 text-sm bg-white border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                  @click.stop>
+                <div class="flex flex-1 gap-1">
                   <button @click.stop="buyPack(pack.id, 1)" :disabled="!store.canBuyPack(pack.id)"
-                    class="flex-1 px-2 py-1 bg-blue-500 text-white text-sm rounded disabled:opacity-50">
+                    class="flex-1 px-2 py-1 text-sm text-white bg-blue-500 rounded disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700">
                     Buy 1
                   </button>
                   <button @click.stop="buyPack(pack.id, buyAmounts[pack.id])" :disabled="!canBuyAmount(pack.id)"
-                    class="flex-1 px-2 py-1 bg-blue-600 text-white text-sm rounded disabled:opacity-50">
+                    class="flex-1 px-2 py-1 text-sm text-white bg-blue-600 rounded disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800">
                     Buy X
                   </button>
                   <button @click.stop="buyMax(pack.id)" :disabled="!store.canBuyPack(pack.id)"
-                    class="flex-1 px-2 py-1 bg-blue-700 text-white text-sm rounded disabled:opacity-50">
+                    class="flex-1 px-2 py-1 text-sm text-white bg-blue-700 rounded disabled:opacity-50 dark:bg-blue-800 dark:hover:bg-blue-900">
                     Max
                   </button>
                 </div>
               </div>
 
               <!-- Show total cost when buying multiple -->
-              <div v-if="buyAmounts[pack.id] > 1" class="text-sm text-gray-600 mt-1">
+              <div v-if="buyAmounts[pack.id] > 1" class="mt-1 text-sm text-gray-600">
                 Total: {{ formatNumber(new BigNumber(pack.price).times(buyAmounts[pack.id])) }} coins
               </div>
             </div>
@@ -166,31 +168,31 @@
 
         <!-- Right Column: Owned Packs -->
         <div>
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl sm:text-2xl mb-4">Your Packs</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="mb-4 text-xl sm:text-2xl dark:text-white">Your Packs</h2>
             <div class="text-sm text-gray-600">
               Pack Storage: {{ store.packStorageUsed }}/{{ store.maxPackStorage }}
             </div>
           </div>
           <div class="grid gap-4 min-h-[200px]">
-            <div v-for="pack in store.ownedPacks" :key="pack.id" class="border p-4 rounded-lg">
+            <div v-for="pack in store.ownedPacks" :key="pack.id" class="p-4 border rounded-lg">
               <h3 class="font-bold">{{ pack.name }}</h3>
               <p>Amount: {{ pack.amount }}</p>
               <div class="flex gap-2 mt-2">
-                <button @click="handleOpenPack(pack.id, 1)" class="flex-1 px-4 py-2 bg-green-500 text-white rounded">
+                <button @click="handleOpenPack(pack.id, 1)" class="flex-1 px-4 py-2 text-white bg-green-500 rounded">
                   Open 1
                 </button>
                 <button v-if="pack.amount > 1" @click="handleOpenPack(pack.id, pack.amount)"
-                  class="flex-1 px-4 py-2 bg-green-700 text-white rounded group relative">
+                  class="relative flex-1 px-4 py-2 text-white bg-green-700 rounded group">
                   Open All
-                  <span v-if="pack.amount > MAX_PACKS_PER_OPEN" class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded
-                      opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                  <span v-if="pack.amount > MAX_PACKS_PER_OPEN"
+                    class="absolute px-2 py-1 mb-2 text-xs text-white transition -translate-x-1/2 bg-black rounded opacity-0 bottom-full left-1/2 group-hover:opacity-100 whitespace-nowrap">
                     Will open {{ MAX_PACKS_PER_OPEN }} packs maximum
                   </span>
                 </button>
               </div>
             </div>
-            <div v-if="!store.ownedPacks.length" class="text-gray-500 text-center p-4 border rounded-lg">
+            <div v-if="!store.ownedPacks.length" class="p-4 text-center text-gray-500 border rounded-lg">
               No packs owned
             </div>
           </div>
@@ -206,13 +208,14 @@
         <div class="border-t border-gray-200"></div>
 
         <!-- Add sorting controls above the inventory grid -->
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl sm:text-2xl">Inventory</h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl sm:text-2xl dark:text-white">Inventory</h2>
           <div class="flex items-center gap-4">
             <!-- Type Filter -->
             <div class="flex items-center gap-2">
               <label class="text-sm text-gray-600">Filter:</label>
-              <select v-model="inventoryFilter" class="px-2 py-1 border rounded text-sm bg-white">
+              <select v-model="inventoryFilter"
+                class="px-2 py-1 text-sm bg-white border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                 <option value="all">All Types</option>
                 <option value="combat">Combat Items</option>
                 <option v-for="type in availableTypes" :key="type" :value="type">
@@ -224,7 +227,8 @@
             <!-- Existing Sort Controls -->
             <div class="flex items-center gap-2">
               <label class="text-sm text-gray-600">Sort by:</label>
-              <select v-model="inventorySort" class="px-2 py-1 border rounded text-sm bg-white">
+              <select v-model="inventorySort"
+                class="px-2 py-1 text-sm bg-white border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
                 <option value="rarity">Rarity</option>
                 <option value="production">Production</option>
                 <option value="value">Value</option>
@@ -240,8 +244,8 @@
         </div>
 
         <!-- Update the inventory grid to use sorted items -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div v-for="item in sortedInventory" :key="item.id" class="border rounded-lg p-4 flex flex-col" :class="{
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div v-for="item in sortedInventory" :key="item.id" class="flex flex-col p-4 border rounded-lg" :class="{
             'border-gray-300': item.rarity === 'common',
             'border-green-400': item.rarity === 'uncommon',
             'border-blue-400': item.rarity === 'rare',
@@ -249,16 +253,16 @@
             'border-yellow-400': item.rarity === 'legendary',
           }">
             <!-- Item Header -->
-            <div class="flex justify-between items-start mb-2">
+            <div class="flex items-start justify-between mb-2">
               <h3 class="font-bold">{{ item.name }}</h3>
-              <div class="text-right text-sm">
+              <div class="text-sm text-right">
                 <div>Amount: {{ item.amount }}</div>
                 <div>Value: {{ formatNumber(item.value) }}</div>
               </div>
             </div>
 
             <!-- Item Info -->
-            <div class="space-y-2 flex-grow">
+            <div class="flex-grow space-y-2">
               <!-- Rarity and Types -->
               <div class="flex flex-wrap items-center gap-2">
                 <span class="text-sm capitalize" :class="{
@@ -278,7 +282,7 @@
 
               <!-- Combat Stats -->
               <div v-if="itemManager.getItem(item.id)?.combatStats"
-                class="grid grid-cols-3 gap-2 p-2 bg-gray-50 rounded text-sm">
+                class="grid grid-cols-3 gap-2 p-2 text-sm rounded bg-gray-50">
                 <div class="text-center">
                   <div class="font-bold text-red-600">
                     {{ itemManager.getItem(item.id)?.combatStats?.attack }}
@@ -300,7 +304,7 @@
               </div>
 
               <!-- Production -->
-              <div class="text-green-600 text-sm">
+              <div class="text-sm text-green-600">
                 +{{ formatNumber(getItemProduction(item.id)) }}/min
               </div>
 
@@ -334,12 +338,12 @@
               <!-- Lock Toggle -->
               <label class="flex items-center justify-end gap-2 cursor-pointer select-none">
                 <input type="checkbox" :checked="item.locked" @change="store.toggleItemLock(item.id)"
-                  class="w-4 h-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500">
+                  class="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-500">
                 <span class="text-sm text-gray-600">Lock Item</span>
               </label>
             </div>
           </div>
-          <div v-if="!store.inventory.length" class="text-gray-500 text-center p-4 border rounded-lg">
+          <div v-if="!store.inventory.length" class="p-4 text-center text-gray-500 border rounded-lg">
             No items in inventory
           </div>
         </div>
