@@ -1,54 +1,55 @@
 <template>
-    <div v-if="show" class="fixed inset-0 flex items-start justify-center z-50">
+    <div v-if="show" class="fixed inset-0 z-50 flex items-start justify-center">
         <!-- Backdrop -->
         <div class="absolute inset-0 bg-black bg-opacity-50" @click="close"></div>
 
         <!-- Modal -->
-        <div class="relative bg-white rounded-lg p-6 max-w-md w-full mx-4 mt-4"
+        <div class="relative w-full max-w-md p-6 mx-4 mt-4 bg-white dark:bg-gray-800 rounded-lg"
             :class="{ 'animate-shake': props.showAnimations && isShaking }">
             <!-- Fixed Header -->
-            <div class="sticky top-0 bg-white rounded-t-lg border-b p-4 z-10">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">Opening {{ packName }}</h2>
+            <div class="sticky top-0 z-10 p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700 rounded-t-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold dark:text-white">Opening {{ packName }}</h2>
                     <div v-if="remainingItems === 0" class="flex gap-2">
                         <button v-if="hasMorePacks" @click="openAnother"
-                            class="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">
+                            class="px-4 py-2 text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
                             Open Another
                         </button>
                         <button @click="close"
-                            class="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600">
+                            class="px-4 py-2 text-sm text-white bg-green-500 rounded-lg hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700">
                             Done
                         </button>
                     </div>
                     <div v-else class="flex gap-2">
                         <button @click="revealNext"
-                            class="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">
+                            class="px-4 py-2 text-sm text-white bg-blue-500 rounded-lg hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
                             Next
                         </button>
                         <button @click="revealAll"
-                            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                            class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
                             All
                         </button>
                         <button v-if="isAnimating && props.showAnimations" @click="skipAnimation"
-                            class="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-gray-600">
+                            class="px-4 py-2 text-sm text-white bg-green-500 rounded-lg hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700">
                             Skip
                         </button>
                     </div>
                 </div>
 
                 <!-- Progress info -->
-                <div class="flex justify-between items-center text-sm">
+                <div class="flex items-center justify-between text-sm dark:text-gray-300">
                     <div class="flex items-center gap-2">
                         <span v-if="remainingItems > 0">
                             Remaining Items: {{ remainingItems }}
                         </span>
-                        <span v-if="remainingPacks && remainingPacks > 0" class="text-blue-600">
+                        <span v-if="remainingPacks && remainingPacks > 0" class="text-blue-600 dark:text-blue-400">
                             ({{ remainingPacks }} more packs)
                         </span>
                     </div>
                     <div v-if="revealedItems.length > 0" class="flex items-center gap-2">
                         <span>Total Value:</span>
-                        <span :class="{ 'text-green-600': isProfit, 'text-red-600': !isProfit }">
+                        <span
+                            :class="{ 'text-green-600 dark:text-green-400': isProfit, 'text-red-600 dark:text-red-400': !isProfit }">
                             {{ formatNumber(totalValue) }}
                             <span class="ml-1">
                                 ({{ isProfit ? '+' : '' }}{{ formatNumber(profit) }})
@@ -58,7 +59,7 @@
                 </div>
 
                 <!-- Add animation note -->
-                <div v-if="props.showAnimations" class="text-xs text-gray-500 mt-2">
+                <div v-if="props.showAnimations" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                     Tip: You can disable animations in settings for faster pack openings
                 </div>
             </div>
@@ -68,32 +69,32 @@
                 <!-- Revealed items -->
                 <div class="space-y-3 max-h-[60vh] overflow-y-auto p-4">
                     <div v-for="(item, index) in stackedItems" :key="item.id" ref="itemRefs"
-                        class="border rounded-lg p-4 mb-4 animate-fade-in" :class="{
-                            'border-gray-300': item.rarity === 'common',
-                            'border-green-400': item.rarity === 'uncommon',
-                            'border-blue-400': item.rarity === 'rare',
-                            'border-purple-400': item.rarity === 'epic',
-                            'border-yellow-400': item.rarity === 'legendary',
+                        class="p-4 mb-4 border rounded-lg animate-fade-in dark:bg-gray-700" :class="{
+                            'border-gray-300 dark:border-gray-600': item.rarity === 'common',
+                            'border-green-400 dark:border-green-500': item.rarity === 'uncommon',
+                            'border-blue-400 dark:border-blue-500': item.rarity === 'rare',
+                            'border-purple-400 dark:border-purple-500': item.rarity === 'epic',
+                            'border-yellow-400 dark:border-yellow-500': item.rarity === 'legendary',
                             'shadow-glow': item.id === revealedItems[revealedItems.length - 1]?.id && props.showAnimations,
                         }">
                         <div>
-                            <h3 class="font-bold">{{ item.name }}</h3>
+                            <h3 class="font-bold dark:text-white">{{ item.name }}</h3>
                             <div class="flex items-center gap-2">
                                 <p class="text-sm capitalize" :class="{
-                                    'text-gray-600': item.rarity === 'common',
-                                    'text-green-600': item.rarity === 'uncommon',
-                                    'text-blue-600': item.rarity === 'rare',
-                                    'text-purple-600': item.rarity === 'epic',
-                                    'text-yellow-600': item.rarity === 'legendary',
+                                    'text-gray-600 dark:text-gray-400': item.rarity === 'common',
+                                    'text-green-600 dark:text-green-400': item.rarity === 'uncommon',
+                                    'text-blue-600 dark:text-blue-400': item.rarity === 'rare',
+                                    'text-purple-600 dark:text-purple-400': item.rarity === 'epic',
+                                    'text-yellow-600 dark:text-yellow-400': item.rarity === 'legendary',
                                 }">
                                     {{ item.rarity }}
                                 </p>
-                                <span class="text-sm text-gray-500">×{{ item.amount }}</span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">×{{ item.amount }}</span>
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="font-medium">{{ formatNumber(item.value) }} coins each</p>
-                            <p class="text-sm text-gray-600">
+                            <p class="font-medium dark:text-white">{{ formatNumber(item.value) }} coins each</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
                                 Total: {{ formatNumber(item.value?.times(item.amount)) }}
                             </p>
                         </div>
@@ -302,6 +303,10 @@ const handleEscape = (e: KeyboardEvent) => {
     scrollbar-color: #CBD5E0 #EDF2F7;
 }
 
+.dark .overflow-y-auto {
+    scrollbar-color: #4B5563 #1F2937;
+}
+
 .overflow-y-auto::-webkit-scrollbar {
     width: 6px;
 }
@@ -311,9 +316,17 @@ const handleEscape = (e: KeyboardEvent) => {
     border-radius: 3px;
 }
 
+.dark .overflow-y-auto::-webkit-scrollbar-track {
+    background: #1F2937;
+}
+
 .overflow-y-auto::-webkit-scrollbar-thumb {
     background-color: #CBD5E0;
     border-radius: 3px;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: #4B5563;
 }
 
 @keyframes shake {
