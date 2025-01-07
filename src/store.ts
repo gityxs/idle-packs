@@ -79,10 +79,44 @@ interface SaveData {
   bossData?: BossSaveData
 }
 
-export interface State {
-  highestBossDefeated: number
-  autoOpenerIntervals: { [key: string]: number }
-  lastAutoOpen: { [key: string]: number }
+// Add new type for upgrade groups
+type UpgradeGroup = {
+  name: string
+  upgrades: Upgrade[]
+}
+
+// Add getter to group upgrades
+const getUpgradeGroups = (upgrades: Upgrade[]): UpgradeGroup[] => {
+  const groups: Record<string, UpgradeGroup> = {
+    general: {
+      name: 'General',
+      upgrades: [],
+    },
+  }
+
+  upgrades.forEach(upgrade => {
+    if (!upgrade.packId) {
+      groups.general.upgrades.push(upgrade)
+      return
+    }
+
+    const packId = upgrade.packId
+    if (!groups[packId]) {
+      // Convert packId to display name (e.g., 'morty-pack' -> 'Morty Pack')
+      const name = packId
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+
+      groups[packId] = {
+        name,
+        upgrades: [],
+      }
+    }
+    groups[packId].upgrades.push(upgrade)
+  })
+
+  return Object.values(groups)
 }
 
 export const useStore = defineStore('main', {
@@ -439,6 +473,32 @@ export const useStore = defineStore('main', {
         packId: 'mythical-pack',
       },
       {
+        id: 'mythical-pack-instant',
+        name: 'Mythical Pack Instant Reset',
+        description: 'Remove time restriction completely',
+        basePrice: 2_000_000,
+        priceMultiplier: 1,
+        level: 0,
+        maxLevel: 1,
+        type: 'packTimer',
+        packId: 'mythical-pack',
+        requiresUpgrade: {
+          id: 'mythical-pack-timer',
+          level: 9,
+        },
+      },
+      {
+        id: 'mythical-pack-opener',
+        name: 'Mythical Pack Auto-Opener',
+        description: 'Automatically opens Mythical Packs every few seconds',
+        level: 0,
+        maxLevel: 5,
+        basePrice: 100_000_000,
+        priceMultiplier: 5,
+        type: 'autoOpener',
+        packId: 'mythical-pack',
+      },
+      {
         id: 'ancient-pack-limit',
         name: 'Ancient Pack Capacity',
         description: 'Increase purchase limit of Ancient Civilization Pack by 2',
@@ -495,6 +555,17 @@ export const useStore = defineStore('main', {
         packId: 'cyber-template-pack',
       },
       {
+        id: 'cyber-pack-auto',
+        name: 'Cyber Pack Auto-Buyer',
+        description: 'Unlock automatic purchasing for Cyber Temple Pack',
+        basePrice: 10_000_000,
+        priceMultiplier: 1,
+        level: 0,
+        maxLevel: 1,
+        type: 'autoBuy',
+        packId: 'cyber-template-pack',
+      },
+      {
         id: 'cyber-pack-instant',
         name: 'Cyber Pack Instant Reset',
         description: 'Remove time restriction completely',
@@ -508,17 +579,6 @@ export const useStore = defineStore('main', {
           id: 'cyber-pack-timer',
           level: 9,
         },
-      },
-      {
-        id: 'cyber-pack-auto',
-        name: 'Cyber Pack Auto-Buyer',
-        description: 'Unlock automatic purchasing for Cyber Temple Pack',
-        basePrice: 10_000_000,
-        priceMultiplier: 1,
-        level: 0,
-        maxLevel: 1,
-        type: 'autoBuy',
-        packId: 'cyber-template-pack',
       },
       {
         id: 'ancient-pack-instant',
@@ -551,36 +611,6 @@ export const useStore = defineStore('main', {
         },
       },
       {
-        id: 'ancient-pack-instant',
-        name: 'Ancient Pack Instant Reset',
-        description: 'Remove time restriction completely',
-        basePrice: 500_000,
-        priceMultiplier: 1,
-        level: 0,
-        maxLevel: 1,
-        type: 'packTimer',
-        packId: 'ancient-civilization-pack',
-        requiresUpgrade: {
-          id: 'ancient-pack-timer',
-          level: 9,
-        },
-      },
-      {
-        id: 'cyber-pack-instant',
-        name: 'Cyber Pack Instant Reset',
-        description: 'Remove time restriction completely',
-        basePrice: 5_000_000,
-        priceMultiplier: 1,
-        level: 0,
-        maxLevel: 1,
-        type: 'packTimer',
-        packId: 'cyber-template-pack',
-        requiresUpgrade: {
-          id: 'cyber-pack-timer',
-          level: 9,
-        },
-      },
-      {
         id: 'fakemon-pack-instant',
         name: 'Fakemon Pack Instant Reset',
         description: 'Remove time restriction completely',
@@ -601,10 +631,10 @@ export const useStore = defineStore('main', {
         description: 'Automatically opens Morty Packs every few seconds',
         level: 0,
         maxLevel: 5,
-        basePrice: 1000000, // 1 million
+        basePrice: 1000000,
         priceMultiplier: 5,
         type: 'autoOpener',
-        packId: 'morty',
+        packId: 'morty-pack',
       },
       {
         id: 'ancient-auto-opener',
@@ -612,10 +642,10 @@ export const useStore = defineStore('main', {
         description: 'Automatically opens Ancient Packs every few seconds',
         level: 0,
         maxLevel: 5,
-        basePrice: 5000000, // 5 million
+        basePrice: 1_000_000_000,
         priceMultiplier: 5,
         type: 'autoOpener',
-        packId: 'ancient',
+        packId: 'ancient-civilization-pack',
       },
       {
         id: 'cyber-auto-opener',
@@ -623,10 +653,10 @@ export const useStore = defineStore('main', {
         description: 'Automatically opens Cyber Packs every few seconds',
         level: 0,
         maxLevel: 5,
-        basePrice: 25000000, // 25 million
+        basePrice: 10_000_000_000,
         priceMultiplier: 5,
         type: 'autoOpener',
-        packId: 'cyber',
+        packId: 'cyber-template-pack',
       },
       {
         id: 'fakemon-auto-opener',
@@ -634,10 +664,10 @@ export const useStore = defineStore('main', {
         description: 'Automatically opens Fakemon Packs every few seconds',
         level: 0,
         maxLevel: 5,
-        basePrice: 100000000, // 100 million
+        basePrice: 10000000,
         priceMultiplier: 5,
         type: 'autoOpener',
-        packId: 'fakemon',
+        packId: 'fakemon-pack',
       },
     ] as Upgrade[],
 
@@ -941,13 +971,8 @@ export const useStore = defineStore('main', {
       const now = Date.now()
       const deltaMinutes = (now - this.lastUpdate) / (1000 * 60)
 
-      // Calculate total production from equipped items
-      const production = this.equippedItems.reduce((total, item) => {
-        if (!item) return total
-        const definition = itemManager.getItem(item.id)
-        if (!definition) return total
-        return total.plus(new BigNumber(definition.coinsPerMinute))
-      }, new BigNumber(0))
+      // Use totalProduction getter instead of calculating production here
+      const production = this.totalProduction
 
       this.coins = this.coins.plus(production.times(deltaMinutes))
       this.totalCoinsEarned = this.totalCoinsEarned.plus(production.times(deltaMinutes))
@@ -1430,7 +1455,7 @@ export const useStore = defineStore('main', {
         // Show backup reminder
         const reminder = document.createElement('div')
         reminder.className =
-          'fixed top-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded z-50'
+          'fixed z-50 px-4 py-3 text-yellow-700 bg-yellow-100 border border-yellow-400 rounded top-4 right-4'
         reminder.innerHTML = `
           <div class="flex justify-between items-start">
             <div class="flex-1">
@@ -1551,9 +1576,9 @@ export const useStore = defineStore('main', {
         const definition = itemManager.getItem(item.id)
         if (!definition) return total
 
-        let production = new BigNumber(definition.coinsPerMinute)
+        let production = new BigNumber(definition.coinsPerMinute || 0)
 
-        let multiplier = achievementManager.getTotalBonus('coinProduction')
+        const multiplier = achievementManager.getTotalBonus('coinProduction')
         production = production.times(new BigNumber(1).plus(multiplier))
 
         // Apply synergy effects
@@ -1584,6 +1609,10 @@ export const useStore = defineStore('main', {
 
     packStorageRemaining(): number {
       return this.maxPackStorage - this.packStorageUsed
+    },
+
+    upgradeGroups(): UpgradeGroup[] {
+      return getUpgradeGroups(this.upgrades)
     },
   },
 

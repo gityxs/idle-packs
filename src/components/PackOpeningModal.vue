@@ -4,10 +4,10 @@
         <div class="absolute inset-0 bg-black bg-opacity-50" @click="close"></div>
 
         <!-- Modal -->
-        <div class="relative w-full max-w-md p-6 mx-4 mt-4 bg-white dark:bg-gray-800 rounded-lg"
+        <div class="relative w-full max-w-md p-6 mx-4 mt-4 bg-white rounded-lg dark:bg-gray-800"
             :class="{ 'animate-shake': props.showAnimations && isShaking }">
             <!-- Fixed Header -->
-            <div class="sticky top-0 z-10 p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700 rounded-t-lg">
+            <div class="sticky top-0 z-10 p-4 bg-white border-b rounded-t-lg dark:bg-gray-800 dark:border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-2xl font-bold dark:text-white">Opening {{ packName }}</h2>
                     <div v-if="remainingItems === 0" class="flex gap-2">
@@ -131,14 +131,18 @@ const remainingItems = computed(() => props.items.length - revealedItems.value.l
 
 // Compute stacked items (combine duplicates)
 const stackedItems = computed(() => {
-    const itemMap = new Map<string, Item & { amount?: number }>()
+    const itemMap = new Map<string, Item & { amount: number }>()
 
     revealedItems.value.forEach(item => {
         const existing = itemMap.get(item.id)
         if (existing) {
             existing.amount = (existing.amount || 1) + 1
         } else {
-            itemMap.set(item.id, { ...item, amount: 1 })
+            itemMap.set(item.id, {
+                ...item,
+                amount: 1,
+                value: new BigNumber(item.value)
+            })
         }
     })
 
