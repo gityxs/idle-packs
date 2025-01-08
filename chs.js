@@ -284,7 +284,7 @@ var cnItems = {
     "Automatically opens Fakemon Packs every few seconds": "每隔几秒自动打开幻兽包",
     "Automatically opens Morty Packs every few seconds": "每隔几秒就自动打开莫蒂包",
     "Automatically opens Mythical Packs every few seconds": "每隔几秒自动打开神话包",
-    "Cyber Template Pack": "赛博模板包",
+    "Cyber Template Pack": "赛博神庙包",
     "Dark Mode": "深色模式",
     "Requires Mythical Pack Efficiency level 9": "需要神话包效率等级9",
     "": "",
