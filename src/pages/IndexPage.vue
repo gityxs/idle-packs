@@ -41,7 +41,14 @@
               ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]">
-            Packs
+            Shop
+          </button>
+          <button @click="activeTab = 'openings'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
+            activeTab === 'openings'
+              ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+          ]">
+            Open Packs
           </button>
           <button @click="activeTab = 'inventory'" class="px-1 py-2 -mb-px whitespace-nowrap" :class="[
             activeTab === 'inventory'
@@ -92,8 +99,8 @@
       </div>
 
       <!-- Tab Content -->
-      <div v-if="activeTab === 'packs'" class="grid grid-cols-1 gap-6">
-        <!-- Left Column: Shop -->
+      <div v-if="activeTab === 'packs'" class="space-y-6">
+        <!-- Shop content -->
         <div>
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl sm:text-2xl dark:text-white">Shop</h2>
@@ -105,7 +112,7 @@
               </label>
             </div>
           </div>
-          <div class="grid gap-4">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div v-for="pack in store.availablePacks" :key="pack.id"
               class="border p-4 rounded-lg min-w-[200px] dark:border-gray-700 dark:bg-gray-800">
               <div class="flex items-start justify-between mb-2">
@@ -165,25 +172,29 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Right Column: Owned Packs -->
+      <!-- Add new openings tab content -->
+      <div v-else-if="activeTab === 'openings'" class="space-y-6">
         <div>
           <div class="flex items-center justify-between mb-4">
-            <h2 class="mb-4 text-xl sm:text-2xl dark:text-white">Your Packs</h2>
+            <h2 class="text-xl sm:text-2xl dark:text-white">Your Packs</h2>
             <div class="text-sm text-gray-600">
               Pack Storage: {{ store.packStorageUsed }}/{{ store.maxPackStorage }}
             </div>
           </div>
-          <div class="grid gap-4 min-h-[200px]">
-            <div v-for="pack in store.ownedPacks" :key="pack.id" class="p-4 border rounded-lg">
-              <h3 class="font-bold">{{ pack.name }}</h3>
-              <p>Amount: {{ pack.amount }}</p>
-              <div class="flex gap-2 mt-2">
-                <button @click="handleOpenPack(pack.id, 1)" class="flex-1 px-4 py-2 text-white bg-green-500 rounded">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div v-for="pack in store.ownedPacks" :key="pack.id"
+              class="flex flex-col p-4 border rounded-lg dark:border-gray-700 dark:bg-gray-800">
+              <h3 class="mb-2 text-lg font-bold">{{ pack.name }}</h3>
+              <p class="mb-4">Amount: {{ pack.amount }}</p>
+              <div class="grid grid-cols-2 gap-2 mt-auto sm:grid-cols-1 lg:grid-cols-2">
+                <button @click="handleOpenPack(pack.id, 1)"
+                  class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
                   Open 1
                 </button>
                 <button v-if="pack.amount > 1" @click="handleOpenPack(pack.id, pack.amount)"
-                  class="relative flex-1 px-4 py-2 text-white bg-green-700 rounded group">
+                  class="relative px-4 py-2 text-white bg-green-700 rounded hover:bg-green-800 group">
                   Open All
                   <span v-if="pack.amount > MAX_PACKS_PER_OPEN"
                     class="absolute px-2 py-1 mb-2 text-xs text-white transition -translate-x-1/2 bg-black rounded opacity-0 bottom-full left-1/2 group-hover:opacity-100 whitespace-nowrap">
@@ -192,7 +203,7 @@
                 </button>
               </div>
             </div>
-            <div v-if="!store.ownedPacks.length" class="p-4 text-center text-gray-500 border rounded-lg">
+            <div v-if="!store.ownedPacks.length" class="p-4 text-center text-gray-500 border rounded-lg col-span-full">
               No packs owned
             </div>
           </div>
@@ -324,7 +335,7 @@
                   Sell All
                 </button>
                 <button @click="store.equipItem(item.id)" :disabled="store.equippedItems.length >= store.maxEquippedItems ||
-                  store.equippedItems.some(equipped => equipped.id === item.id)" class="flex-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 
+                  store.equippedItems.some(equipped => equipped.id === item.id)" class="flex-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded hover:bg-blue-600
                          disabled:opacity-50 disabled:hover:bg-blue-500">
                   {{ store.equippedItems.length >= store.maxEquippedItems
                     ? 'No Slots'
