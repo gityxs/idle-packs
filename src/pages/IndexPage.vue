@@ -144,30 +144,31 @@
                 </label>
               </div>
 
-              <!-- Add buy controls -->
-              <div class="flex items-center gap-2 mt-2">
-                <input type="number" v-model="buyAmounts[pack.id]" min="1" :max="store.getMaxBuyable(pack.id)"
-                  class="w-20 px-2 py-1 text-sm bg-white border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
-                  @click.stop>
-                <div class="flex flex-1 gap-1">
+              <!-- Update the buy controls section -->
+              <div class="flex flex-col gap-2 mt-2">
+                <div class="flex items-center gap-2">
+                  <input type="number" v-model="buyAmounts[pack.id]" min="1" :max="store.getMaxBuyable(pack.id)"
+                    class="w-24 px-2 py-1 text-sm bg-white border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                    @click.stop>
+                  <span class="text-sm text-gray-600">
+                    {{ buyAmounts[pack.id] > 1 ? `Total: ${formatNumber(new
+                      BigNumber(pack.price).times(buyAmounts[pack.id]))}` : '' }}
+                  </span>
+                </div>
+                <div class="grid grid-cols-3 gap-1">
                   <button @click.stop="buyPack(pack.id, 1)" :disabled="!store.canBuyPack(pack.id)"
-                    class="flex-1 px-2 py-1 text-sm text-white bg-blue-500 rounded disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700">
+                    class="px-2 py-1.5 text-sm text-white bg-blue-500 rounded disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700">
                     Buy 1
                   </button>
                   <button @click.stop="buyPack(pack.id, buyAmounts[pack.id])" :disabled="!canBuyAmount(pack.id)"
-                    class="flex-1 px-2 py-1 text-sm text-white bg-blue-600 rounded disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800">
+                    class="px-2 py-1.5 text-sm text-white bg-blue-600 rounded disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-800">
                     Buy X
                   </button>
                   <button @click.stop="buyMax(pack.id)" :disabled="!store.canBuyPack(pack.id)"
-                    class="flex-1 px-2 py-1 text-sm text-white bg-blue-700 rounded disabled:opacity-50 dark:bg-blue-800 dark:hover:bg-blue-900">
+                    class="px-2 py-1.5 text-sm text-white bg-blue-700 rounded disabled:opacity-50 dark:bg-blue-800 dark:hover:bg-blue-900">
                     Max
                   </button>
                 </div>
-              </div>
-
-              <!-- Show total cost when buying multiple -->
-              <div v-if="buyAmounts[pack.id] > 1" class="mt-1 text-sm text-gray-600">
-                Total: {{ formatNumber(new BigNumber(pack.price).times(buyAmounts[pack.id])) }} coins
               </div>
             </div>
           </div>
