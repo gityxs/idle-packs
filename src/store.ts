@@ -33,6 +33,7 @@ export interface Pack {
   purchaseLimit?: PackPurchaseLimit
   hasAutoBuyer: boolean
   autoBuyEnabled: boolean
+  autoBuyLimit?: number
 }
 
 interface OwnedPack extends Pack {
@@ -162,6 +163,7 @@ export const useStore = defineStore('main', {
         },
         hasAutoBuyer: false,
         autoBuyEnabled: false,
+        autoBuyLimit: 0,
       },
       {
         id: 'morty-pack',
@@ -189,6 +191,7 @@ export const useStore = defineStore('main', {
         },
         hasAutoBuyer: false,
         autoBuyEnabled: false,
+        autoBuyLimit: 0,
       },
       {
         id: 'fakemon-pack',
@@ -216,6 +219,7 @@ export const useStore = defineStore('main', {
         },
         hasAutoBuyer: false,
         autoBuyEnabled: false,
+        autoBuyLimit: 0,
       },
       {
         id: 'mythical-pack',
@@ -260,6 +264,7 @@ export const useStore = defineStore('main', {
         purchaseLimit: { amount: 3, minutes: 60, lastPurchaseTime: 0, remainingPurchases: 3 },
         hasAutoBuyer: false,
         autoBuyEnabled: false,
+        autoBuyLimit: 0,
       },
       {
         id: 'ancient-civilization-pack',
@@ -289,6 +294,7 @@ export const useStore = defineStore('main', {
         purchaseLimit: { amount: 3, minutes: 60, lastPurchaseTime: 0, remainingPurchases: 3 },
         hasAutoBuyer: false,
         autoBuyEnabled: false,
+        autoBuyLimit: 0,
       },
       {
         id: 'cyber-template-pack',
@@ -320,6 +326,7 @@ export const useStore = defineStore('main', {
         purchaseLimit: { amount: 3, minutes: 60, lastPurchaseTime: 0, remainingPurchases: 3 },
         hasAutoBuyer: false,
         autoBuyEnabled: false,
+        autoBuyLimit: 0,
       },
     ] as Pack[],
 
@@ -489,10 +496,10 @@ export const useStore = defineStore('main', {
       },
       {
         id: 'mythical-pack-opener',
-        name: 'Mythical Pack Auto-Opener',
-        description: 'Automatically opens Mythical Packs every few seconds',
+        name: 'Mythical Pack Auto Opener',
+        description: 'Automatically opens Mythical Packs. Each level reduces interval by 1 second (10s → 1s)',
         level: 0,
-        maxLevel: 5,
+        maxLevel: 9,
         basePrice: 100_000_000,
         priceMultiplier: 5,
         type: 'autoOpener',
@@ -628,9 +635,9 @@ export const useStore = defineStore('main', {
       {
         id: 'morty-auto-opener',
         name: 'Morty Pack Auto Opener',
-        description: 'Automatically opens Morty Packs every few seconds',
+        description: 'Automatically opens Morty Packs. Each level reduces interval by 1 second (10s → 1s)',
         level: 0,
-        maxLevel: 5,
+        maxLevel: 9,
         basePrice: 1000000,
         priceMultiplier: 5,
         type: 'autoOpener',
@@ -639,9 +646,9 @@ export const useStore = defineStore('main', {
       {
         id: 'ancient-auto-opener',
         name: 'Ancient Pack Auto Opener',
-        description: 'Automatically opens Ancient Packs every few seconds',
+        description: 'Automatically opens Ancient Packs. Each level reduces interval by 1 second (10s → 1s)',
         level: 0,
-        maxLevel: 5,
+        maxLevel: 9,
         basePrice: 1_000_000_000,
         priceMultiplier: 5,
         type: 'autoOpener',
@@ -650,9 +657,9 @@ export const useStore = defineStore('main', {
       {
         id: 'cyber-auto-opener',
         name: 'Cyber Pack Auto Opener',
-        description: 'Automatically opens Cyber Packs every few seconds',
+        description: 'Automatically opens Cyber Packs. Each level reduces interval by 1 second (10s → 1s)',
         level: 0,
-        maxLevel: 5,
+        maxLevel: 9,
         basePrice: 10_000_000_000,
         priceMultiplier: 5,
         type: 'autoOpener',
@@ -661,9 +668,9 @@ export const useStore = defineStore('main', {
       {
         id: 'fakemon-auto-opener',
         name: 'Fakemon Pack Auto Opener',
-        description: 'Automatically opens Fakemon Packs every few seconds',
+        description: 'Automatically opens Fakemon Packs. Each level reduces interval by 1 second (10s → 1s)',
         level: 0,
-        maxLevel: 5,
+        maxLevel: 9,
         basePrice: 10000000,
         priceMultiplier: 5,
         type: 'autoOpener',
@@ -717,6 +724,9 @@ export const useStore = defineStore('main', {
       setInterval(() => {
         this.saveToLocalStorage()
       }, this.autoSaveInterval)
+
+      // Initialize auto openers
+      this.initAutoOpeners()
 
       console.log('Game initialized!')
     },
@@ -1087,9 +1097,17 @@ export const useStore = defineStore('main', {
     tryAutoBuyPacks() {
       for (const pack of this.availablePacks) {
         if (pack.hasAutoBuyer && pack.autoBuyEnabled) {
+          const ownedAmount = this.ownedPacks.find(p => p.id === pack.id)?.amount || 0
+          if (pack.autoBuyLimit && ownedAmount >= pack.autoBuyLimit) continue
+
           const maxBuyable = this.getMaxBuyable(pack.id)
           if (maxBuyable > 0) {
-            this.buyPack(pack.id, maxBuyable)
+            // If there's a limit, don't exceed it
+            const amountToBuy = pack.autoBuyLimit ? Math.min(maxBuyable, pack.autoBuyLimit - ownedAmount) : maxBuyable
+
+            if (amountToBuy > 0) {
+              this.buyPack(pack.id, amountToBuy)
+            }
           }
         }
       }
@@ -1497,26 +1515,28 @@ export const useStore = defineStore('main', {
         clearInterval(this.autoOpenerIntervals[packId])
       }
 
-      // Calculate interval based on upgrade level (faster at higher levels)
-      // Level 1: 10 seconds, Level 5: 2 seconds
-      const interval = Math.max(2000, 10000 - (upgrade.level - 1) * 2000)
+      // Calculate interval based on upgrade level (1 second decrease per level)
+      // Level 1: 10 seconds, Level 2: 9 seconds, ..., Level 9: 1 second
+      const interval = Math.max(1000, 10000 - (upgrade.level - 1) * 1000)
+
+      // Initialize last open time
+      this.lastAutoOpen[packId] = Date.now()
 
       this.autoOpenerIntervals[packId] = setInterval(() => {
-        const now = Date.now()
-        const pack = this.availablePacks.find(p => p.id === packId)
+        const pack = this.ownedPacks.find(p => p.id === packId)
 
-        // Check if pack exists and if we can open it
-        if (!pack || !this.canOpenPack(pack)) return
-
-        // Check if enough time has passed since last purchase
-        if (pack.purchaseLimit && pack.purchaseLimit.minutes > 0) {
-          const lastOpen = this.lastAutoOpen[packId] || 0
-          if (now - lastOpen < pack.purchaseLimit.minutes * 60 * 1000) return
+        // Check if we have any packs to open
+        if (!pack || pack.amount <= 0) {
+          this.stopAutoOpener(packId)
+          return
         }
 
-        // Open the pack silently (without modal)
-        this.openPackSilently(pack)
-        this.lastAutoOpen[packId] = now
+        // Open one pack silently
+        const items = this.openPack(packId, 1)
+        if (items) {
+          items.forEach(item => this.addItemToInventory(item))
+          this.lastAutoOpen[packId] = Date.now()
+        }
       }, interval)
     },
 
@@ -1546,6 +1566,13 @@ export const useStore = defineStore('main', {
         .forEach(u => {
           if (u.packId) this.startAutoOpener(u.packId)
         })
+    },
+
+    setAutoBuyLimit(packId: string, limit: number) {
+      const pack = this.availablePacks.find(p => p.id === packId)
+      if (pack) {
+        pack.autoBuyLimit = Math.max(0, limit)
+      }
     },
   },
 

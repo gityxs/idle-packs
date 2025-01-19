@@ -142,6 +142,20 @@
                     class="w-4 h-4">
                   <span class="text-sm">Auto Buy</span>
                 </label>
+
+                <!-- Add limit input -->
+                <div v-if="pack.autoBuyEnabled" class="flex items-center gap-1">
+                  <span class="text-sm text-gray-600">Limit:</span>
+                  <input type="number" :value="pack.autoBuyLimit || ''"
+                    @input="e => store.setAutoBuyLimit(pack.id, Number(e.target.value))"
+                    class="w-16 px-1 py-0.5 text-sm bg-white border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                    min="0" placeholder="∞">
+                </div>
+              </div>
+
+              <!-- Add owned amount indicator when auto-buy is enabled -->
+              <div v-if="pack.autoBuyEnabled" class="mt-1 text-sm text-gray-500">
+                Owned: {{ getOwnedPackAmount(pack.id) }}/{{ pack.autoBuyLimit || '∞' }}
               </div>
 
               <!-- Update the buy controls section -->
@@ -188,7 +202,26 @@
             <div v-for="pack in store.ownedPacks" :key="pack.id"
               class="flex flex-col p-4 border rounded-lg dark:border-gray-700 dark:bg-gray-800">
               <h3 class="mb-2 text-lg font-bold">{{ pack.name }}</h3>
-              <p class="mb-4">Amount: {{ pack.amount }}</p>
+              <p class="mb-2">Amount: {{ pack.amount }}</p>
+
+              <!-- Add Auto Opener Controls -->
+              <div v-if="hasAutoOpener(pack.id)" class="mb-4 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" :checked="isAutoOpenerActive(pack.id)" @change="toggleAutoOpener(pack.id)"
+                      class="w-4 h-4">
+                    <span class="text-sm">Auto Open</span>
+                  </label>
+                  <span class="text-sm text-gray-500">
+                    {{ getAutoOpenerInterval(pack.id) }}s
+                  </span>
+                </div>
+                <div v-if="isAutoOpenerActive(pack.id)" class="h-1 bg-gray-200 rounded">
+                  <div class="h-full transition-all duration-200 bg-blue-500 rounded"
+                    :style="{ width: `${getAutoOpenerProgress(pack.id)}%` }"></div>
+                </div>
+              </div>
+
               <div class="grid grid-cols-2 gap-2 mt-auto sm:grid-cols-1 lg:grid-cols-2">
                 <button @click="handleOpenPack(pack.id, 1)"
                   class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
@@ -400,7 +433,7 @@
 
 <script setup lang="ts">
 import { useStore } from '../store'
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import BigNumber from 'bignumber.js'
 import PackOpeningModal from '../components/PackOpeningModal.vue'
 import EquippedItems from '../components/EquippedItems.vue'
@@ -648,4 +681,58 @@ const availableTypes = computed(() => {
   })
   return Array.from(types).sort()
 })
+
+// Add new helper functions
+const hasAutoOpener = (packId: string) => {
+  const upgrade = store.upgrades.find(u => u.type === 'autoOpener' && u.packId === packId)
+  return upgrade && upgrade.level > 0
+}
+
+const isAutoOpenerActive = (packId: string) => {
+  return !!store.autoOpenerIntervals[packId]
+}
+
+const toggleAutoOpener = (packId: string) => {
+  if (isAutoOpenerActive(packId)) {
+    store.stopAutoOpener(packId)
+  } else {
+    store.startAutoOpener(packId)
+  }
+}
+
+const getAutoOpenerInterval = (packId: string) => {
+  const upgrade = store.upgrades.find(u => u.type === 'autoOpener' && u.packId === packId)
+  if (!upgrade) return 0
+  return (Math.max(1000, 10000 - (upgrade.level - 1) * 1000) / 1000).toFixed(1)
+}
+
+// Add progress tracking for the progress bar
+const autoOpenerProgress = ref<Record<string, number>>({})
+
+// Update progress every 100ms
+onMounted(() => {
+  const progressInterval = setInterval(() => {
+    store.ownedPacks.forEach(pack => {
+      if (isAutoOpenerActive(pack.id)) {
+        const now = Date.now()
+        const interval = Number(getAutoOpenerInterval(pack.id)) * 1000
+        const lastOpen = store.lastAutoOpen[pack.id] || now
+        const progress = Math.min(100, ((now - lastOpen) / interval) * 100)
+        autoOpenerProgress.value[pack.id] = progress
+      }
+    })
+  }, 100)
+
+  onBeforeUnmount(() => {
+    clearInterval(progressInterval)
+  })
+})
+
+const getAutoOpenerProgress = (packId: string) => {
+  return autoOpenerProgress.value[packId] || 0
+}
+
+const getOwnedPackAmount = (packId: string) => {
+  return store.ownedPacks.find(p => p.id === packId)?.amount || 0
+}
 </script>
