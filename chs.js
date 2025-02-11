@@ -287,7 +287,7 @@ var cnItems = {
     "Cyber Template Pack": "赛博神庙包",
     "Dark Mode": "深色模式",
     "Requires Mythical Pack Efficiency level 9": "需要神话包效率等级9",
-    "": "",
+    "Open Packs": "打开卡包",
     "": "",
     "": "",
     "": "",
